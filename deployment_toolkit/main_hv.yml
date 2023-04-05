@@ -1,0 +1,44 @@
+- name: Deploy BenchFaster in hypervisor mode
+  hosts: testers    
+  tasks:
+
+    - name: Copy BenchFaster to all hypervisors
+      ansible.builtin.shell: |
+        sh {{ toolkit_dir }}/main.sh \
+          --opt copy \
+          --address {{ hostvars[groups.hypervisors[item]].ansible_host }} \
+          --user {{ hostvars[groups.hypervisors[item]].ansible_user }} \ 
+          --workpath /home/{{ hostvars[groups.hypervisors[item]].ansible_user }}/ \ 
+          >> {{ results_path.path }}/logs.txt
+      loop: "{{ range(0, groups.hypervisors|length, 1)|list }}"
+
+
+    - name: Deploy BenchFaster in all hypervisor mode
+      ansible.builtin.shell: |
+        sh {{ toolkit_dir }}/main.sh \
+          --opt vagrant \
+          --address {{ hostvars[groups.hypervisors[item]].ansible_host }} \
+          --address-benchmark {{ hostvars[groups.hypervisors[item]].address_benchmark }} \
+          --user {{ hostvars[groups.hypervisors[item]].ansible_user }} \ 
+          --workpath /home/{{ hostvars[groups.hypervisors[item]].ansible_user }}/ \ 
+          --interface {{ hostvars[groups.hypervisors[item]].interface }} \ 
+          --num-workers {{ hostvars[groups.hypervisors[item]].num_workers }} \
+          --vm-cpu {{ hostvars[groups.hypervisors[item]].vm_cpu }} \
+          --vm-mem {{ hostvars[groups.hypervisors[item]].vm_mem }} \ 
+          --vm-image {{ hostvars[groups.hypervisors[item]].vm_image }} \
+          --k3s-version {{ hostvars[groups.hypervisors[item]].k3s_version }} \ 
+          --k3s-port {{ hostvars[groups.hypervisors[item]].k3s_port }} \ 
+          --openfaas-version {{ hostvars[groups.hypervisors[item]].openfaas_version }} \ 
+          --openfaas-port {{ hostvars[groups.hypervisors[item]].openfaas_port }} \ 
+          --openfaas-namespace {{ hostvars[groups.hypervisors[item]].openfaas_namespace }} \ 
+          --openfaas-functions {{ hostvars[groups.hypervisors[item]].openfaas_functions }} \ 
+          --nebula-version {{ hostvars[groups.hypervisors[item]].nebula_version }} \ 
+          --nebula-address {{ hostvars[groups.hypervisors[item]].nebula_address }} \ 
+          --nebula-port {{ hostvars[groups.hypervisors[item]].nebula_port }} \ 
+          --interface-tm {{ hostvars[inventory_hostname].interface }} \
+          >> {{ results_path.path }}/logs.txt
+      loop: "{{ range(0, groups.hypervisors|length, 1)|list }}"
+
+
+
+

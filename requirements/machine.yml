@@ -1,0 +1,15 @@
+- name: Install machine requirements
+  hosts: machines
+  tasks:
+
+    - name: Install requirements (only Ubuntu 22.04)
+      ansible.builtin.apt:
+        pkg:
+        - curl
+        - jq
+        update_cache: no
+        state: present
+      become: true
+      when: ansible_facts['distribution']=="Ubuntu"
+
+    # - name: Install requirements for Arch (TO-DO)

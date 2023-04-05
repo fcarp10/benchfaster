@@ -1,0 +1,36 @@
+- name: Install Nebula lighthouse on headnode
+  ansible.builtin.shell: |
+    ssh -n root@{{ headnode.ansible_host }} \
+      "/home/{{ headnode.ansible_user }}/benchfaster/deployment_toolkit/nebula/nebula_install.sh \
+      {{ headnode.nebula_version }} \
+      /home/{{ headnode.ansible_user }} \
+      {{ headnode.arch }} \
+      lighthouse \
+      {{ headnode.interface }}"
+  args:
+    executable: /bin/bash
+
+- name: Retrieve lighthouse IP file from headnode
+  ansible.builtin.command: ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} "sudo cat /home/{{ headnode.ansible_user }}/benchfaster/lighthouse.ip"
+  register: lighthouse_ip
+
+- name: Copy lighthouse IP file to all workers
+  ansible.builtin.shell: |
+    echo {{ lighthouse_ip.stdout }} | \
+    ssh {{ hostvars[groups.machines[item]].ansible_user }}@{{ hostvars[groups.machines[item]].ansible_host }} \
+    "cat > /home/{{hostvars[groups.machines[item]].ansible_user}}/benchfaster/lighthouse.ip"
+  loop: "{{ range(0, groups.machines|length, 1)|list }}"
+  when: hostvars[groups.machines[item]].headnode is not defined
+
+- name: Install Nebula on workers
+  ansible.builtin.shell: |
+    ssh -n root@{{ hostvars[groups.machines[item]].ansible_host }} \
+      "/home/{{ hostvars[groups.machines[item]].ansible_user }}/benchfaster/deployment_toolkit/nebula/nebula_install.sh \
+      {{ hostvars[groups.machines[item]].nebula_version }} \
+      /home/{{ hostvars[groups.machines[item]].ansible_user }} \
+      {{ hostvars[groups.machines[item]].arch }} \
+      worker{{ item }}"
+  args:
+    executable: /bin/bash
+  loop: "{{ range(0, groups.machines|length, 1)|list }}"
+  when: hostvars[groups.machines[item]].headnode is not defined

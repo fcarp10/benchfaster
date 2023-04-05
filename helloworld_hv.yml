@@ -1,0 +1,38 @@
+- name: Test sleep function in hypervisor mode
+  hosts: localhost
+  tasks:
+    - name: Set global vars
+      ansible.builtin.set_fact:
+        date: "{{ lookup('pipe', 'date +%-d-%-m-%Y_%H-%M-%S') }}"
+        toolkit_dir_tester: "{{ playbook_dir }}/deployment_toolkit"
+        hypervisor: "{{ hostvars[groups.hypervisors[0]] }}"
+        num_machines: "{{ hostvars[groups.hypervisors[0]].num_workers }}"
+        
+    - name: Create results directory
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/_results/{{ date }}"
+        state: directory
+      register: results_dir_tester
+
+- name: Install hypervisor requirements
+  ansible.builtin.import_playbook: "requirements/hypervisor.yml"
+
+- name: Install tester requirements
+  ansible.builtin.import_playbook: "requirements/tester.yml"
+  vars: 
+    toolkit_dir: "{{ hostvars.localhost.toolkit_dir_tester }}"
+    num_machines: "{{ hostvars.localhost.num_machines }}"
+
+- name: Deploy BenchFaster 
+  ansible.builtin.import_playbook: "deployment_toolkit/main_hv.yml"
+  vars:
+    results_path: "{{ hostvars.localhost.results_dir_tester }}"
+    toolkit_dir: "{{ hostvars.localhost.toolkit_dir_tester }}"
+    hypervisor: "{{ hostvars.localhost.hypervisor }}"
+
+- name: Run helloworld benchmark  
+  ansible.builtin.import_playbook: "performance_tests/helloworld/helloworld_test.yml"
+  vars:
+    results_path: "{{ hostvars.localhost.results_dir_tester }}"
+    address_benchmark: "{{ hostvars.localhost.hypervisor.address_benchmark }}"
+    openfaas_port: "{{ hostvars.localhost.hypervisor.openfaas_port }}"

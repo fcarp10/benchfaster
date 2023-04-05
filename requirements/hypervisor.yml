@@ -1,0 +1,56 @@
+- name: Install hypervisor requirements
+  hosts: hypervisors
+  tasks:
+
+    - name: Install requirements (only Ubuntu 22.04)
+      ansible.builtin.apt:
+        pkg:
+        - curl
+        - jq
+        - git
+        - qemu # libvirt deps
+        - qemu-kvm # libvirt deps
+        - libvirt-daemon-system # libvirt deps
+        - ebtables # libvirt deps
+        - libguestfs-tools # libvirt deps
+        - ruby-libvirt # libvirt deps
+        - ruby-fog-libvirt # libvirt deps
+        - libxslt-dev # libvirt deps
+        - libxml2-dev # libvirt deps
+        - zlib1g-dev # libvirt deps
+        - ruby-dev # libvirt deps
+        - nfs-kernel-server # libvirt deps
+        - libvirt-dev # libvirt deps
+        - build-essential # libvirt deps
+        - vagrant
+        update_cache: no
+        state: present
+      become: true
+      when: ansible_facts['distribution']=="Ubuntu"
+
+    # - name: Install requirements for Arch (TO-DO)
+
+    - name: Config libvirt, install vagrant-libvirt plugin
+      ansible.builtin.shell: |
+        sudo usermod -aG libvirt $USER 
+        sudo usermod -aG libvirt-qemu $USER
+        vagrant plugin install vagrant-libvirt
+      become: true
+
+    - name: Root privilege requirement for NFS in Vagrant (only Ubuntu 22.04)
+      ansible.builtin.blockinfile:
+        path: /etc/sudoers.d/vagrant-syncedfolders
+        block: |
+          # Allow passwordless startup of Vagrant with NFS synced folder option.
+          Cmnd_Alias VAGRANT_EXPORTS_CHOWN = /bin/chown 0\:0 /tmp/vagrant-exports
+          Cmnd_Alias VAGRANT_EXPORTS_MV = /bin/mv -f /tmp/vagrant-exports /etc/exports
+          Cmnd_Alias VAGRANT_NFSD_CHECK = /etc/init.d/nfs-kernel-server status
+          Cmnd_Alias VAGRANT_NFSD_START = /etc/init.d/nfs-kernel-server start
+          Cmnd_Alias VAGRANT_NFSD_APPLY = /usr/sbin/exportfs -ar
+          %sudo ALL=(root) NOPASSWD: VAGRANT_EXPORTS_CHOWN, VAGRANT_EXPORTS_MV, VAGRANT_NFSD_CHECK, VAGRANT_NFSD_START, VAGRANT_NFSD_APPLY
+          ubuntu ALL=(ALL) NOPASSWD: ALL
+        create: true
+      become: true
+      when: ansible_facts['distribution']=="Ubuntu"
+    
+    # - name: Root privilege requirement for NFS in Vagrant for Arch (TO-DO)

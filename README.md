@@ -1,120 +1,84 @@
-# BenchFaaS
+# BenchFaster
 
-This repository contains the scripts for the automated deployment of BenchFaaS.
-
-## Changelog:
-
-### v1.0.0 (Sep 21, 2022)
-
-- F. Carpio, M. Michalke and A. Jukan, "BenchFaaS: Benchmarking Serverless
-  Functions in an Edge Computing Network Testbed," in IEEE Network, DOI:
-  [10.1109/MNET.125.2200294](https://doi.org/10.1109/MNET.125.2200294)
-
-## Performance tests
-
-Five performance tests are defined using JMeter in
-`test_scheduler/performance_tests` directory:
-
-1. Overhead: `hello-world` function
-2. Payload size: `payload-echo` function
-3. Intensive: `img-classifier-hub` function
-4. Scalability: `fib-go` function
-5. Chains: `payload-echo-workflow` function
-
-Serverless functions used for the benchmarks can be found
-[here](https://github.com/fcarp10/openfaas-functions).
-
-## Deployment
-
-### Prerequisites
-
-#### Tester machine
-
-- Linux based OS
-- Apache JMeter v5.4.3
-  ([download](https://jmeter.apache.org/download_jmeter.cgi))
-- (Optional) Local container registry
-  ([instructions](https://docs.docker.com/registry/deploying/))
-
-#### Cluster of virtual machines (VMs) or physical machines (PMs)
-
-- VMs (Hypervisor):
-  - Linux based OS
-  - libvirt/KVM ([Ubuntu](https://ubuntu.com/server/docs/virtualization-libvirt)
-    | [Arch Linux](https://wiki.archlinux.org/title/libvirt))
-  - Vagrant
-    ([installation](https://learn.hashicorp.com/tutorials/vagrant/getting-started-install?in=vagrant/getting-started))
-    - Configure password-less sudo for NFS as explained
-      [here](https://www.vagrantup.com/docs/synced-folders/nfs#root-privilege-requirement).
-  - Vagrant plugins
-    ([installation](https://www.vagrantup.com/docs/plugins/usage)): 
-    - `vagrant-libvirt`
-  - netem (`tc`): already included in most Linux distros.
-- PMs:
-  - x86_64/ARM64 based devices
-  - Linux based OS
-  - GbE Switch/Router
-  - Nebula ([installation](https://github.com/slackhq/nebula))
-
-For the instructions, it is assumed that all VMs/PMs are on the same LAN network
-with static IP addresses. However, by using Nebula the testbed also works with
-devices located in different networks even behind NATs or Firewalls. 
-
-All VMs/PMs need additional internet connection for the deployment of required
-tools, but not for the execution of benchmarks.
-
-The public SSH key from the tester machine needs to be added to the Hypervisor
-and to all PMs.
+BenchFaster automates the deployment and benchmarking of containerized
+applications over emulated wide area networks. 
 
 
-### User guide
+## Overview
 
-1. Clone this repository to the tester machine. 
-2. Modify `config.yml` and `testbed_controller.sh` accordingly to your use case.
-   - When using VMs, adjust:
-     - `devices.hypervisor.address`: Hypervisor's IP.
-     - `devices.hypervisor.login`: Username of the hypervisor.
-     - `devices.testmachine.vm_interface`: Tester machine interface connecting
-       to the hypervisor.
-     - `devices.vm.benchmark_bridge`: Hypervisor's interface to bridge the VMs,
-       reachable from the tester machine.
-     - `devices.vm.benchmark_ip`: headnode's IP reachable from the tester
-       machine.
-   - When using PMs, adjust:
-      - `devices.testmachine.pm_interface`: Name of the interface connected to
-        the PMs.
-      - `devices.pm.lighthouse.address` and `devices.pm.lighthouse.port`:
-        Nebula's address and port.
-      - `devices.pm.devices`: Set of PMs for the testbed. 
-        - `ssh_address`: Specific IP address of the PM.
-        - `login`: Username for SSH.
-        - `qos_interface`: Network interface of the PM to apply WAN emulation.
-        - `lighthouse`: True, if the machine is a lighthouse.
-    - (Optional) In both cases, local container registry, leave blank when using the default
-       public registry specified on the `yaml` files:
-       - `*.repoip`: IP of the machine with the local container
-         registry.
-       - `*.repoport`: port of the machine with the local container
-         registry.
-       - `*.privaterepo`: Name of the local container registry.
-3. Run `./testbed_controller.sh` from the tester machine.
+BenchFaster consist on four type of nodes:
+
+- Ansible control node: A system from where one or more instances of BenchFaster are
+  launched. Components:
+  
+  - Ansible
+  
+- Tester node: A remote host from where BenchFaster deployment is launched and the
+  performance tests are run. Components:
+
+  - BenchFaster
+  - Load testing tool: JMeter
+
+- Head node: A remote host where all the core components of BenchFaster are
+  deployed. Components: 
+
+  - Container orchestrator: K3s (master)
+  - Serverless framework: OpenFaaS
+  - Overlay network (discovery server): Nebula lighthouse
+
+- Worker node: A remote host where serverless functions are deployed.
+  Components: 
+
+  - Container orchestrator: K3s (worker node)
+  - Serverless functions: OpenFaaS functions ([examples](https://github.com/fcarp10/openfaas-functions))
+  - Overlay network (client): Nebula host
 
 
-### Troubleshooting
+## Prerequisites
 
-If you get the following error when deploying VMs using `qemu-kvm`: 
+- `ansible` in the control node.
+- SSH access to all nodes.
+- Ubuntu Server 22.04 or Arch Linux.
+- (Optional) Local container [registry](https://docs.docker.com/registry/deploying/)
 
+
+## Operation modes
+
+Two operation modes are possible in BenchFaster:
+
+- Hosts mode: Head and worker nodes are remote systems.
+
+- Hypervisor mode: Head and workers nodes are deployed on VMs libvirt/KVM.
+
+
+## Inventory
+
+Modify the existing ansible `inventory.yml` file or create a new one with the
+list of all hosts. Three categories of devices are expected: `hypervisors`,
+`machines` and `testers`. The most relevant parameters are:
+
+Common for all type of nodes:
+- `ansible_host`: Name of the host to connect from the ansible control node.
+- `ansible_user`: User name to connect
+- `interface`: Network interface
+
+Head node:
+- `num_workers`: Number of expected workers in the cluster 
+- `openfaas_functions`: List of OpenbFaaS functions
+- `address_benchmark`: Name of the host where to run the performance tests
+  against
+
+Hypervisor specific:
+
+- `vm_cpu`: Number of CPUs units per VM
+- `vm_mem`: Amount of RAM per VM
+- `vm_image`: Name of the Vagrant box
+
+
+## Run
+
+From the ansible control node:
+
+```shell
+ansible-playbook --ask-become-pass -i inventory.yml helloworld.yml
 ```
-Error while creating domain: Error saving the server: Call to virDomainDefineXML failed: invalid argument: could not get preferred machine for /usr/bin/qemu-system-x86_64 type=kvm
-```
-
-Check the solution from [here](https://serverfault.com/questions/1002043/libvirt-has-no-kvm-capabilities-even-though-qemu-kvm-works/1002063#1002063).
-
-
-If you get the following error when deploying VMs using `qemu-kvm` on Ubuntu:
-
-```
-Error while creating domain: Error saving the server: Call to virDomainDefineXML failed: Cannot check QEMU binary /usr/libexec/qemu-kvm: No such file or directory
-```
-
-Check the solution from [here](https://github.com/kubevirt/kubevirt/issues/4303)

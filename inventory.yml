@@ -1,0 +1,70 @@
+hypervisors:
+  hosts:
+    hypervisor01:
+      ansible_host: 192.168.1.247
+      ansible_user: ubuntu
+      address_benchmark: 192.168.1.10
+      interface: enp10s0
+      num_workers: 1
+      vm_cpu: 2
+      vm_mem: 4096
+      vm_image: "generic/ubuntu2004"
+      k3s_version: v1.23.6+k3s1
+      k3s_port: 6443
+      openfaas_version: 10.0.8
+      openfaas_port: 31112
+      openfaas_namespace: openfaas-fn
+      openfaas_functions: hello-world
+      nebula_version: 1.5.2
+      nebula_address: lighthouse
+      nebula_port: 4242
+  
+machines:
+  hosts:
+    machine01:
+      ansible_host: 192.168.1.247
+      ansible_user: ubuntu
+      arch: amd64
+      address_benchmark: 192.168.1.247
+      interface: enp10s0
+      num_workers: 1
+      headnode: true
+      k3s_version: v1.23.6+k3s1
+      openfaas_version: 10.0.8
+      openfaas_port: 31112
+      openfaas_namespace: openfaas-fn
+      openfaas_functions: hello-world
+      nebula_version: 1.5.2
+      nebula_address: lighthouse
+      nebula_port: 4242
+    machine02:
+      ansible_host: 192.168.1.35
+      ansible_user: ubuntu
+      arch: amd64
+      interface: enx00e04c304b52
+      k3s_version: v1.23.6+k3s1
+      k3s_port: 6443
+      nebula_version: 1.5.2
+    # machine03:
+    #   ansible_host: 192.168.1.3
+    #   ansible_user: ubuntu
+    #   arch: arm64
+    #   interface: eth0
+    #   k3s_version: v1.23.6+k3s1
+    #   k3s_port: 6443
+    #   nebula_version: 1.5.2
+    # machine04:
+    #   ansible_host: 192.168.1.83
+    #   ansible_user: ubuntu
+    #   arch: arm64
+    #   interface: eth0
+    #   k3s_version: v1.23.6+k3s1
+    #   k3s_port: 6443
+    #   nebula_version: 1.5.2
+
+testers:
+  hosts:
+    tester01:
+      ansible_host: localhost
+      ansible_user: vegeta
+      interface: enp4s0
