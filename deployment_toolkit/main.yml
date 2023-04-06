@@ -12,10 +12,10 @@
           >> {{ results_path.path }}/logs.txt
       loop: "{{ range(0, groups.machines|length, 1)|list }}"
 
-    - name: Deploy Nebula network 
+    - name: Deploy Nebula network in all nodes
       ansible.builtin.include_tasks: nebula/nebula_network.yml
 
-    - name: Deploy K3s cluster 
+    - name: Deploy K3s cluster in all nodes
       ansible.builtin.include_tasks: k3s/k3s_cluster.yml
       
     - name: Install OpenFaas on headnode

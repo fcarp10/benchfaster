@@ -18,6 +18,12 @@ hypervisors:
       nebula_version: 1.5.2
       nebula_address: lighthouse
       nebula_port: 4242
+      delay_intra: 0
+      variance_intra: 0
+      loss_intra: 0
+      delay_tm: 0
+      variance_tm: 0
+      loss_tm: 0
   
 machines:
   hosts:

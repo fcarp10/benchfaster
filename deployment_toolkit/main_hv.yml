@@ -1,4 +1,4 @@
-- name: Deploy BenchFaster in hypervisor mode
+- name: Deploy BenchFaster in hypervisor
   hosts: testers    
   tasks:
 
@@ -13,7 +13,7 @@
       loop: "{{ range(0, groups.hypervisors|length, 1)|list }}"
 
 
-    - name: Deploy BenchFaster in all hypervisor mode
+    - name: Deploy BenchFaster in all hypervisors
       ansible.builtin.shell: |
         sh {{ toolkit_dir }}/main.sh \
           --opt vagrant \
@@ -36,6 +36,12 @@
           --nebula-address {{ hostvars[groups.hypervisors[item]].nebula_address }} \ 
           --nebula-port {{ hostvars[groups.hypervisors[item]].nebula_port }} \ 
           --interface-tm {{ hostvars[inventory_hostname].interface }} \
+          --delay-tm {{ hostvars[groups.hypervisors[item]].delay_tm }} \ 
+          --variance-tm {{ hostvars[groups.hypervisors[item]].variance_tm }} \ 
+          --loss-tm {{ hostvars[groups.hypervisors[item]].loss_tm }} \ 
+          --delay-intra {{ hostvars[groups.hypervisors[item]].delay_intra }} \ 
+          --variance-intra {{ hostvars[groups.hypervisors[item]].variance_intra }} \ 
+          --loss-intra {{ hostvars[groups.hypervisors[item]].loss_intra }} \ 
           >> {{ results_path.path }}/logs.txt
       loop: "{{ range(0, groups.hypervisors|length, 1)|list }}"
 

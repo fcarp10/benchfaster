@@ -1,4 +1,4 @@
-- name: Test sleep function in hypervisor mode
+- name: Hello-world test in hypervisor
   hosts: localhost
   tasks:
     - name: Set global vars
