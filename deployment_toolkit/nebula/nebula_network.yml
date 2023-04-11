@@ -1,5 +1,6 @@
 - name: Install Nebula lighthouse on headnode
   ansible.builtin.shell: |
+    echo "Installing Nebula lighthouse..." >> {{ results_path.path }}/logs.txt
     ssh -n root@{{ headnode.ansible_host }} \
       "/home/{{ headnode.ansible_user }}/benchfaster/deployment_toolkit/nebula/nebula_install.sh \
       {{ nebula.nebula_version }} \
@@ -24,6 +25,7 @@
 
 - name: Install Nebula on workers
   ansible.builtin.shell: |
+    echo "Installing Nebula client..." >> {{ results_path.path }}/logs.txt
     ssh -n root@{{ hostvars[groups.machines[item]].ansible_host }} \
       "/home/{{ hostvars[groups.machines[item]].ansible_user }}/benchfaster/deployment_toolkit/nebula/nebula_install.sh \
       {{ nebula.nebula_version }} \

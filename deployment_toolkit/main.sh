@@ -21,8 +21,6 @@ elif  [ $OPT == "k3s" ]; then
 	echo "Starting deployment..."
     source $TOOLKITPATH/k3s/k3s_main.sh
     k3s_install
-    source $TOOLKITPATH/netem/qos.sh
-	qos_apply
 	echo "Deployment finished!"
 fi
 
