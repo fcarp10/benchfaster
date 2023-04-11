@@ -7,8 +7,8 @@
       --workpath /home/{{ headnode.ansible_user }}/ \ 
       --headnode {{ headnode.headnode }} \
       --interface {{ headnode.interface }} \
-      --num-workers {{ headnode.num_workers }} \
-      --k3s-version {{ headnode.k3s_version }} \ 
+      --num-workers {{ num_workers }} \
+      --k3s-version {{ k3s.k3s_version }} \ 
       >> {{ results_path.path }}/logs.txt
   args:
     executable: /bin/bash
@@ -25,8 +25,8 @@
       --user root \ 
       --workpath /home/{{ hostvars[groups.machines[item]].ansible_user }}/ \ 
       --interface {{ hostvars[groups.machines[item]].interface }} \
-      --k3s-port {{ hostvars[groups.machines[item]].k3s_port }} \ 
-      --k3s-version {{ hostvars[groups.machines[item]].k3s_version }} \ 
+      --k3s-port {{ k3s.k3s_port }} \ 
+      --k3s-version {{ k3s.k3s_version }} \ 
       --k3s-token {{ k3s_token.stdout }} \
       >> {{ results_path.path }}/logs.txt
   args:
@@ -38,7 +38,7 @@
   ansible.builtin.shell: |
       echo "Waiting for all nodes to join the cluster..." >> {{ results_path.path }}/logs.txt
       ACTIVENODES=1
-      until [[ $(($ACTIVENODES-1)) -eq {{ headnode.num_workers|int }} ]]; do
+      until [[ $(($ACTIVENODES-1)) -eq {{ num_workers|int }} ]]; do
           echo -n "." >> {{ results_path.path }}/logs.txt
           ACTIVENODES=$(ssh -n root@{{ headnode.ansible_host }} "sudo kubectl get nodes -o json|jq -r '.items[]|select(.status.conditions[].type==\"Ready\")|select(.spec.taints|not).metadata.name' | wc -l")
           sleep 1

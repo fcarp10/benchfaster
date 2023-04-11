@@ -19,17 +19,7 @@
       ansible.builtin.include_tasks: k3s/k3s_cluster.yml
       
     - name: Install OpenFaas on headnode
-      ansible.builtin.shell: |
-        ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} \
-          "/home/{{ headnode.ansible_user }}/benchfaster/deployment_toolkit/openfaas/openfaas_install.sh \
-          machine \
-          {{ headnode.openfaas_port }} \
-          {{ headnode.openfaas_version }} \
-          {{ headnode.openfaas_namespace }} \
-          {{ headnode.openfaas_functions }}" \
-          >> {{ results_path.path }}/logs.txt
-      args:
-        executable: /bin/bash
+      ansible.builtin.include_tasks: openfaas/openfaas_install.yml
 
 
 

@@ -2,7 +2,7 @@
   ansible.builtin.shell: |
     ssh -n root@{{ headnode.ansible_host }} \
       "/home/{{ headnode.ansible_user }}/benchfaster/deployment_toolkit/nebula/nebula_install.sh \
-      {{ headnode.nebula_version }} \
+      {{ nebula.nebula_version }} \
       /home/{{ headnode.ansible_user }} \
       {{ headnode.arch }} \
       lighthouse \
@@ -26,7 +26,7 @@
   ansible.builtin.shell: |
     ssh -n root@{{ hostvars[groups.machines[item]].ansible_host }} \
       "/home/{{ hostvars[groups.machines[item]].ansible_user }}/benchfaster/deployment_toolkit/nebula/nebula_install.sh \
-      {{ hostvars[groups.machines[item]].nebula_version }} \
+      {{ nebula.nebula_version }} \
       /home/{{ hostvars[groups.machines[item]].ansible_user }} \
       {{ hostvars[groups.machines[item]].arch }} \
       worker{{ item }}"

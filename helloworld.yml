@@ -1,40 +1,29 @@
 - name: Hello-world test
-  hosts: localhost
+  hosts: testers
   tasks:
-
     - name: Set global vars
       ansible.builtin.set_fact:
         date: "{{ lookup('pipe', 'date +%-d-%-m-%Y_%H-%M-%S') }}"
-        toolkit_dir_tester: "{{ playbook_dir }}/deployment_toolkit"
+        toolkit_dir: "{{ playbook_dir }}/deployment_toolkit"
         headnode: "{{ hostvars[groups.machines[0]] }}" 
-        num_machines: "{{ hostvars[groups.machines[0]].num_workers }}"
 
     - name: Create results directory
       ansible.builtin.file:
         path: "{{ playbook_dir }}/_results/{{ date }}"
         state: directory
-      register: results_dir_tester
-
-- name: Install tester requirements
-  ansible.builtin.import_playbook: "requirements/tester.yml"
-  vars: 
-    toolkit_dir: "{{ hostvars.localhost.toolkit_dir_tester }}"
-    num_machines: "{{ hostvars.localhost.num_machines }}"
+      register: results_path
 
 # - name: Install machine requirements
 #   ansible.builtin.import_playbook: "requirements/machine.yml"
 
+- name: Install tester requirements
+  ansible.builtin.import_playbook: "requirements/tester.yml"
+
 - name: Deploy BenchFaster
   ansible.builtin.import_playbook: "deployment_toolkit/main.yml"
   vars:
-    results_path: "{{ hostvars.localhost.results_dir_tester }}"
-    toolkit_dir: "{{ hostvars.localhost.toolkit_dir_tester }}"
-    headnode: "{{ hostvars.localhost.headnode }}"
+    headnode: "{{ hostvars.headnode }}"
 
 - name: Run helloworld benchmark  
   ansible.builtin.import_playbook: "performance_tests/helloworld/helloworld_test.yml"
-  vars:
-    results_path: "{{ hostvars.localhost.results_dir_tester }}"
-    address_benchmark: "{{ hostvars.localhost.headnode.address_benchmark }}"
-    openfaas_port: "{{ hostvars.localhost.headnode.openfaas_port }}"
 

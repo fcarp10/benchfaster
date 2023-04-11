@@ -1,12 +1,12 @@
 - name: Helloworld test with JMeter
-  hosts: localhost
+  hosts: testers
 
   tasks:
 
     - name: run jmeter
       ansible.builtin.shell: jmeter -n -t {{ playbook_dir }}/helloworld_test.jmx \ 
                             -Jrequest.ip={{ address_benchmark }} \
-                            -Jrequest.port={{ openfaas_port }} \
+                            -Jrequest.port={{ openfaas.openfaas_port }} \
                             -Jtest.iterations=100 \
                             -l {{ results_path.path }}/results.csv
 

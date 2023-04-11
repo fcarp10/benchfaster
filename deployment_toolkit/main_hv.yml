@@ -2,48 +2,46 @@
   hosts: testers    
   tasks:
 
-    - name: Copy BenchFaster to all hypervisors
+    - name: Copy BenchFaster to hypervisor
       ansible.builtin.shell: |
         sh {{ toolkit_dir }}/main.sh \
           --opt copy \
-          --address {{ hostvars[groups.hypervisors[item]].ansible_host }} \
-          --user {{ hostvars[groups.hypervisors[item]].ansible_user }} \ 
-          --workpath /home/{{ hostvars[groups.hypervisors[item]].ansible_user }}/ \ 
+          --address {{ hypervisor.ansible_host }} \
+          --user {{ hypervisor.ansible_user }} \ 
+          --workpath /home/{{ hypervisor.ansible_user }}/ \ 
           >> {{ results_path.path }}/logs.txt
-      loop: "{{ range(0, groups.hypervisors|length, 1)|list }}"
 
 
-    - name: Deploy BenchFaster in all hypervisors
+    - name: Deploy BenchFaster in hypervisor
       ansible.builtin.shell: |
         sh {{ toolkit_dir }}/main.sh \
           --opt vagrant \
-          --address {{ hostvars[groups.hypervisors[item]].ansible_host }} \
-          --address-benchmark {{ hostvars[groups.hypervisors[item]].address_benchmark }} \
-          --user {{ hostvars[groups.hypervisors[item]].ansible_user }} \ 
-          --workpath /home/{{ hostvars[groups.hypervisors[item]].ansible_user }}/ \ 
-          --interface {{ hostvars[groups.hypervisors[item]].interface }} \ 
-          --num-workers {{ hostvars[groups.hypervisors[item]].num_workers }} \
-          --vm-cpu {{ hostvars[groups.hypervisors[item]].vm_cpu }} \
-          --vm-mem {{ hostvars[groups.hypervisors[item]].vm_mem }} \ 
-          --vm-image {{ hostvars[groups.hypervisors[item]].vm_image }} \
-          --k3s-version {{ hostvars[groups.hypervisors[item]].k3s_version }} \ 
-          --k3s-port {{ hostvars[groups.hypervisors[item]].k3s_port }} \ 
-          --openfaas-version {{ hostvars[groups.hypervisors[item]].openfaas_version }} \ 
-          --openfaas-port {{ hostvars[groups.hypervisors[item]].openfaas_port }} \ 
-          --openfaas-namespace {{ hostvars[groups.hypervisors[item]].openfaas_namespace }} \ 
-          --openfaas-functions {{ hostvars[groups.hypervisors[item]].openfaas_functions }} \ 
-          --nebula-version {{ hostvars[groups.hypervisors[item]].nebula_version }} \ 
-          --nebula-address {{ hostvars[groups.hypervisors[item]].nebula_address }} \ 
-          --nebula-port {{ hostvars[groups.hypervisors[item]].nebula_port }} \ 
-          --interface-tm {{ hostvars[inventory_hostname].interface }} \
-          --delay-tm {{ hostvars[groups.hypervisors[item]].delay_tm }} \ 
-          --variance-tm {{ hostvars[groups.hypervisors[item]].variance_tm }} \ 
-          --loss-tm {{ hostvars[groups.hypervisors[item]].loss_tm }} \ 
-          --delay-intra {{ hostvars[groups.hypervisors[item]].delay_intra }} \ 
-          --variance-intra {{ hostvars[groups.hypervisors[item]].variance_intra }} \ 
-          --loss-intra {{ hostvars[groups.hypervisors[item]].loss_intra }} \ 
+          --address {{ hypervisor.ansible_host }} \
+          --user {{ hypervisor.ansible_user }} \
+          --workpath /home/{{ hypervisor.ansible_user }}/ \ 
+          --interface {{ hypervisor.interface }} \ 
+          --address-benchmark {{ address_benchmark }} \
+          --num-workers {{ num_workers }} \
+          --interface-tm {{ interface }} \
+          --vm-cpu {{ vagrant.vm_cpu }} \
+          --vm-mem {{ vagrant.vm_mem }} \ 
+          --vm-image {{ vagrant.vm_image }} \
+          --nebula-version {{ nebula.nebula_version }} \ 
+          --nebula-address {{ nebula.nebula_address }} \ 
+          --nebula-port {{ nebula.nebula_port }} \ 
+          --k3s-version {{ k3s.k3s_version }} \ 
+          --k3s-port {{ k3s.k3s_port }} \ 
+          --openfaas-version {{ openfaas.openfaas_version }} \ 
+          --openfaas-port {{ openfaas.openfaas_port }} \ 
+          --openfaas-namespace {{ openfaas.openfaas_namespace }} \ 
+          --openfaas-functions {{ openfaas.openfaas_functions }} \ 
+          --delay-tm {{ netem.delay_tm }} \ 
+          --variance-tm {{ netem.variance_tm }} \ 
+          --loss-tm {{ netem.loss_tm }} \ 
+          --delay-intra {{ netem.delay_intra }} \ 
+          --variance-intra {{ netem.variance_intra }} \ 
+          --loss-intra {{ netem.loss_intra }} \ 
           >> {{ results_path.path }}/logs.txt
-      loop: "{{ range(0, groups.hypervisors|length, 1)|list }}"
 
 
 

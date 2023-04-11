@@ -45,7 +45,7 @@
 
     - name: Generate nebula certificates - workers
       ansible.builtin.shell: nebula-cert sign -name "worker{{ i + 1 }}" -ip "192.168.50.10{{ i + 1 }}/24"
-      loop: "{{ range(0, num_machines|int , 1) | list }}"
+      loop: "{{ range(0, num_workers|int , 1) | list }}"
       loop_control:
         index_var: i
       args:

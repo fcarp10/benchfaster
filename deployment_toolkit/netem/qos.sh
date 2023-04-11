@@ -17,6 +17,6 @@ qos_apply_hypervisor_mode() {
 		echo "Applying latency..."
 		sudo tc qdisc add dev $INTERFACE_TM root netem delay ${DELAY_TM}ms ${VARIANCE_TM}ms distribution normal loss ${LOSS_TM}%
 	else
-		echo "No QoS to apply"
+		echo "No QoS to apply to tester machine"
 	fi
 }

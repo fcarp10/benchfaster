@@ -111,7 +111,7 @@ sudo -E helm upgrade openfaas --install openfaas/openfaas --namespace openfaas \
     --version $OPENFAAS_VERSION
 if [ $? -ne 0 ]; then echo "There was an error while deploying OpenFaaS. Aborting..." \
     && exit 1; fi
-sleep 120
+sleep 60
 if [ "$DEBUG" = 'true' ]; then
     sudo -E kubectl -n openfaas rollout status -w deployment/grafana
     sudo -E kubectl -n openfaas exec -ti deployment/grafana -c grafana -- grafana-cli admin reset-admin-password password
