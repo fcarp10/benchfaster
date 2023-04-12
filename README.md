@@ -17,7 +17,7 @@ BenchFaster consist on four type of nodes:
   performance tests are run. Components:
 
   - BenchFaster
-  - Load testing tool: JMeter
+  - Load testing tool: JMeter, k6
 
 - Head node: A remote host where all the core components of BenchFaster are
   deployed. Components: 
@@ -82,3 +82,5 @@ From the ansible control node:
 ```shell
 ansible-playbook --ask-become-pass -i inventory.yml helloworld.yml
 ```
+
+When using a hypervisor, add `--extra-vars "hvm=true"` parameter.

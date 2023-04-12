@@ -21,6 +21,7 @@
         pkg:
           - jmeter
           - nebula
+          - k6-bin
         state: present
         executable: paru
       become: true
