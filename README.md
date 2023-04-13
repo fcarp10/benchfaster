@@ -75,12 +75,22 @@ Hypervisor specific:
 - `vm_image`: Name of the Vagrant box
 
 
-## Run
+## Install Requirements
 
-From the ansible control node:
+Install the requirements for each type of node with:
 
 ```shell
-ansible-playbook --ask-become-pass -i inventory.yml helloworld.yml
+ansible-playbook --ask-become-pass -i inventory.yml requirements/${REQ_FILE}.yml
+```
+where `REQ_FILE` is either `machine`, `tester` or `hypervisor`.
+
+
+## Run hello-world test
+
+Run a hello-world test with:
+
+```shell
+ansible-playbook -i inventory.yml helloworld.yml
 ```
 
-When using a hypervisor, add `--extra-vars "hvm=true"` parameter.
+When using a hypervisor, add `--extra-vars "hvm=true"` to the previous command.

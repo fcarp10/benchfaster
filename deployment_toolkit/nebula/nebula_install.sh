@@ -56,6 +56,5 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
-systemctl start nebula
-systemctl enable nebula
+systemctl restart nebula
 

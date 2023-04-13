@@ -1,0 +1,41 @@
+- name: Set global vars
+  ansible.builtin.set_fact:
+    hypervisor: "{{ headnode }}"
+
+- name: Generate nebula certificates
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+
+- name: Deploy BenchFaster in hypervisor
+  ansible.builtin.shell: |
+    sh {{ toolkit_dir }}/main.sh \
+      --opt vagrant \
+      --address {{ hypervisor.ansible_host }} \
+      --user {{ hypervisor.ansible_user }} \
+      --workpath /home/{{ hypervisor.ansible_user }}/ \ 
+      --interface {{ hypervisor.interface }} \ 
+      --address-benchmark {{ address_benchmark }} \
+      --num-workers {{ num_workers }} \
+      --interface-tm {{ interface }} \
+      --vm-cpu {{ vagrant.vm_cpu }} \
+      --vm-mem {{ vagrant.vm_mem }} \ 
+      --vm-image {{ vagrant.vm_image }} \
+      --nebula-version {{ nebula.nebula_version }} \ 
+      --nebula-address {{ nebula.nebula_address }} \ 
+      --nebula-port {{ nebula.nebula_port }} \ 
+      --k3s-version {{ k3s.k3s_version }} \ 
+      --k3s-port {{ k3s.k3s_port }} \ 
+      --openfaas-version {{ openfaas.openfaas_version }} \ 
+      --openfaas-port {{ openfaas.openfaas_port }} \ 
+      --openfaas-namespace {{ openfaas.openfaas_namespace }} \ 
+      --openfaas-functions {{ openfaas.openfaas_functions }} \ 
+      --delay-tm {{ netem.delay_tm }} \ 
+      --variance-tm {{ netem.variance_tm }} \ 
+      --loss-tm {{ netem.loss_tm }} \ 
+      --delay-intra {{ netem.delay_intra }} \ 
+      --variance-intra {{ netem.variance_intra }} \ 
+      --loss-intra {{ netem.loss_intra }} \ 
+      >> {{ results_path.path }}/logs.txt
+
+
+
+

@@ -1,0 +1,21 @@
+- name: Set global vars
+  ansible.builtin.set_fact:
+    date: "{{ lookup('pipe', 'date +%-d-%-m-%Y_%H-%M-%S') }}"
+    toolkit_dir: "{{ playbook_dir }}/deployment_toolkit"
+    headnode: "{{ hostvars[groups.machines[0]] }}" 
+
+- name: Create results directory
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/_results/{{ date }}"
+    state: directory
+  register: results_path
+
+- name: Copy BenchFaster to machines
+  ansible.builtin.shell: |
+    sh {{ toolkit_dir }}/main.sh \
+      --opt copy \
+      --address {{ hostvars[groups.machines[item]].ansible_host }} \
+      --user {{ hostvars[groups.machines[item]].ansible_user }} \ 
+      --workpath /home/{{ hostvars[groups.machines[item]].ansible_user }}/ \ 
+      >> {{ results_path.path }}/logs.txt
+  loop: "{{ range(0, groups.machines|length, 1)|list }}"

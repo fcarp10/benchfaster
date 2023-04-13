@@ -1,46 +1,34 @@
 - name: Hello-world test
   hosts: testers
   tasks:
+    - name: Initialize BenchFaster
+      ansible.builtin.include_tasks: "deployment_toolkit/init.yml"
+
     - name: Set global vars
       ansible.builtin.set_fact:
-        date: "{{ lookup('pipe', 'date +%-d-%-m-%Y_%H-%M-%S') }}"
-        toolkit_dir: "{{ playbook_dir }}/deployment_toolkit"
         headnode: "{{ hostvars[groups.machines[0]] }}" 
 
-    - name: Create results directory
-      ansible.builtin.file:
-        path: "{{ playbook_dir }}/_results/{{ date }}"
-        state: directory
-      register: results_path
+    - name: Deploy Nebula network
+      ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_network.yml"
+      when: hvm is not defined
 
-# - name: Install machine requirements
-#   ansible.builtin.import_playbook: "requirements/machine.yml"
-#   when: hvm is not defined
+    - name: Deploy K3s cluster
+      ansible.builtin.include_tasks: "{{ toolkit_dir }}/k3s/k3s_cluster.yml"
+      when: hvm is not defined
+      
+    - name: Install OpenFaas on headnode
+      ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"
+      when: hvm is not defined
 
-# - name: Install hypervisor requirements
-#   ansible.builtin.import_playbook: "requirements/hypervisor.yml"
-#   when: hvm
+    - name: Apply QoS to all nodes
+      ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_intra.yml"
+      when: hvm is not defined
 
-- name: Install tester requirements
-  ansible.builtin.import_playbook: "requirements/tester.yml"
-
-- name: Deploy BenchFaster
-  ansible.builtin.import_playbook: "deployment_toolkit/main.yml"
-  vars:
-    headnode: "{{ hostvars.headnode }}"
-  when: hvm is not defined
-
-- name: Deploy BenchFaster in hypervisor 
-  ansible.builtin.import_playbook: "deployment_toolkit/main_hv.yml"
-  vars:
-    headnode: "{{ hostvars.headnode }}"
-  when: hvm
-
-- name: Run helloworld benchmarks 
-  hosts: testers
-  tasks:
-
-    - name: Run test with JMeter
+    - name: Deploy BenchFaster in hypervisor 
+      ansible.builtin.include_tasks: "{{ toolkit_dir }}/hvm.yml"
+      when: hvm is defined
+    
+    - name: Run helloworld test with JMeter
       ansible.builtin.shell: |
         jmeter -n -t {{ playbook_dir }}/performance_tests/helloworld/helloworld_test.jmx \ 
           -Jrequest.ip={{ address_benchmark }} \
@@ -48,7 +36,7 @@
           -Jtest.iterations=100 \
           -l {{ results_path.path }}/results_jmeter.csv
 
-    - name: Run test with K6
+    - name: Run helloworld test with K6
       ansible.builtin.shell: |
         k6 run {{ playbook_dir }}/performance_tests/helloworld/helloworld_test.js \
           -e HOST={{ address_benchmark }} \

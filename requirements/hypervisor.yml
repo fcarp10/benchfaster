@@ -1,5 +1,5 @@
 - name: Install hypervisor requirements
-  hosts: hypervisors
+  hosts: machines
   tasks:
 
     - name: Install requirements (only Ubuntu 22.04)
