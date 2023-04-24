@@ -6,6 +6,8 @@ applications over emulated wide area networks.
 
 ## Overview
 
+<img src="stack.png" alt= “stack” width="700">
+
 BenchFaster consist on four type of nodes:
 
 - Ansible control node: A system from where one or more instances of BenchFaster are
