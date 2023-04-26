@@ -6,7 +6,7 @@ applications over emulated wide area networks.
 
 ## Overview
 
-<img src="stack.png" alt= “stack” width="700">
+<img src="stack.png" alt= “stack”>
 
 BenchFaster consist on four type of nodes:
 
@@ -38,9 +38,9 @@ BenchFaster consist on four type of nodes:
 
 ## Prerequisites
 
-- `ansible` in the control node.
-- SSH access to all nodes.
-- Ubuntu Server 22.04 or Arch Linux.
+- `ansible` installed in the control node (can be the same machine as the tester node)
+- Passwordless SSH login from control node to the other nodes
+- Ubuntu Server 22.04 or Arch Linux in all machines
 - (Optional) Local container [registry](https://docs.docker.com/registry/deploying/)
 
 
@@ -48,33 +48,40 @@ BenchFaster consist on four type of nodes:
 
 Two operation modes are possible in BenchFaster:
 
-- Hosts mode: Head and worker nodes are remote systems.
+- Hosts mode: Head/worker nodes are remote systems.
 
-- Hypervisor mode: Head and workers nodes are deployed on VMs libvirt/KVM.
+- Hypervisor mode: Head/worker nodes are deployed on VMs with libvirt/KVM.
 
 
 ## Inventory
 
 Modify the existing ansible `inventory.yml` file or create a new one with the
-list of all hosts. Three categories of devices are expected: `hypervisors`,
-`machines` and `testers`. The most relevant parameters are:
+list of all hosts. Two categories of hosts are expected: `machines` and
+`testers`. 
 
-Common for all type of nodes:
-- `ansible_host`: Name of the host to connect from the ansible control node.
+Common parameters:
+- `ansible_host`: Name of the host to connect from the ansible control node
 - `ansible_user`: User name to connect
 - `interface`: Network interface
 
-Head node:
-- `num_workers`: Number of expected workers in the cluster 
-- `openfaas_functions`: List of OpenbFaaS functions
+Machines:
+- `arch`: amd64 or arm64
+- `headnode`: true, when the machine is the head node
+
+Testers:
 - `address_benchmark`: Name of the host where to run the performance tests
   against
-
-Hypervisor specific:
-
-- `vm_cpu`: Number of CPUs units per VM
-- `vm_mem`: Amount of RAM per VM
-- `vm_image`: Name of the Vagrant box
+- `num_workers`: Number of expected workers in the cluster 
+- `vagrant.vm_cpu`: Number of CPUs units per VM (required only in hypervisor mode)
+- `vagrant.vm_mem`: Amount of RAM per VM (required only in hypervisor mode)
+- `vagrant.vm_image`: Name of the Vagrant box (required only in hypervisor mode)
+- `openfaas.openfaas_functions`: List of OpenFaaS functions to deploy
+- `netem.delay_intra`: intra node delay in ms
+- `netem.variance_intra`: intra node delay variance in ms
+- `netem.loss_intra`: intra node loss probability in %
+- `netem.delay_tm`: from tester to head node delay in ms
+- `netem.variance_tm`: from tester to head node variance in ms
+- `netem.loss_tm`: from tester to head node loss probability in %
 
 
 ## Install Requirements
