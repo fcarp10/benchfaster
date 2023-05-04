@@ -1,12 +1,15 @@
 - name: Hello-world test
   hosts: testers
   tasks:
+    - name: Set toolkit directory
+      ansible.builtin.set_fact:
+        toolkit_dir: "{{ playbook_dir }}/deployment_toolkit"
+
+    - name: Generate Nebula certificates
+      ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+
     - name: Initialize BenchFaster
       ansible.builtin.include_tasks: "deployment_toolkit/init.yml"
-
-    - name: Set global vars
-      ansible.builtin.set_fact:
-        headnode: "{{ hostvars[groups.machines[0]] }}" 
 
     - name: Deploy Nebula network
       ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_network.yml"

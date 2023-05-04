@@ -5,7 +5,7 @@ require_relative 'environment.rb'
 include Variables
 
 $k3s_headnode_install = <<-HEADNODE
-  curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$1 INSTALL_K3S_EXEC="--advertise-address 192.168.50.100 \
+  curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$1 INSTALL_K3S_EXEC="--advertise-address 192.168.50.99 \
           --flannel-iface nebula \
           --kube-apiserver-arg "enable-admission-plugins=PodNodeSelector"" sh -
 HEADNODE
@@ -16,7 +16,7 @@ $k3s_worker_install = <<-SCRIPT
   echo "vm.max_map_count=262144" >> vm.conf
   sudo mv vm.conf /etc/sysctl.d/
   sleep 10
-  curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$1 K3S_URL=https://192.168.50.100:6443 \
+  curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$1 K3S_URL=https://192.168.50.99:6443 \
   K3S_TOKEN=$(cat /vagrant/benchfaster/node-token) \
   INSTALL_K3S_EXEC="--flannel-iface nebula" sh -
 SCRIPT

@@ -23,8 +23,8 @@ mv $TMP/nebula /usr/local/bin/
 mv $TMP/nebula-cert /usr/local/bin/
 
 # Copying the configuration files and certificates
+rm -rf /etc/nebula
 mkdir -p /etc/nebula
-
 if [ $NEBULA_WORKER = "lighthouse" ]; then
     echo "Installing nebula lighthouse..."
     cp $NEBULA_CONFIG/lighthouse.yml /etc/nebula/nebula.yml
@@ -36,7 +36,7 @@ cp $NEBULA_CONFIG/cert/$NEBULA_WORKER.crt /etc/nebula/nebula.crt
 cp $NEBULA_CONFIG/cert/$NEBULA_WORKER.key /etc/nebula/nebula.key
 cp $NEBULA_CONFIG/cert/ca.crt /etc/nebula/
 
-#Creating and starting the service
+# Creating and starting the service
 cat << EOF > /etc/systemd/system/nebula.service
 [Unit]
 Description=nebula

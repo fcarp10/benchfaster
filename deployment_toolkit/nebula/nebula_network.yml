@@ -1,6 +1,3 @@
-- name: Generate nebula certificates
-  ansible.builtin.include_tasks: nebula_certs.yml
-
 - name: Install Nebula lighthouse on headnode
   ansible.builtin.shell: |
     echo "Installing Nebula lighthouse..." >> {{ results_path.path }}/logs.txt

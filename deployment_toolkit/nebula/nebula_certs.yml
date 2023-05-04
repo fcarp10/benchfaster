@@ -11,14 +11,15 @@
 - name: Generate nebula certificates - lighthouse
   ansible.builtin.shell: |
       nebula-cert ca -name "BenchFaster"
-      nebula-cert sign -name "lighthouse" -ip "192.168.50.100/24"
+      nebula-cert sign -name "lighthouse" -ip "192.168.50.99/24"
   args:
     chdir: "{{ toolkit_dir }}/nebula/config/cert/"
 
 - name: Generate nebula certificates - workers
-  ansible.builtin.shell: nebula-cert sign -name "worker{{ i + 1 }}" -ip "192.168.50.10{{ i + 1 }}/24"
-  loop: "{{ range(0, num_workers|int , 1) | list }}"
+  ansible.builtin.shell: nebula-cert sign -name "worker{{ i }}" -ip "192.168.50.10{{ i }}/24"
+  loop: "{{ range(0, groups.machines|length, 1)|list }}"
   loop_control:
     index_var: i
+  when: hostvars[groups.machines[item]].headnode is not defined
   args:
     chdir: "{{ toolkit_dir }}/nebula/config/cert/"

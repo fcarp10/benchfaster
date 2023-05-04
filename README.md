@@ -39,8 +39,9 @@ BenchFaster consist on four type of nodes:
 ## Prerequisites
 
 - `ansible` installed in the control node (can be the same machine as the tester node)
-- Passwordless SSH login from control node to the other nodes
-- Ubuntu Server 22.04 or Arch Linux in all machines
+- Passwordless sudo access in all nodes
+- SSH key-based authentication from control node to all other nodes
+- Ubuntu Server 22.04 or Arch Linux in all nodes
 - (Optional) Local container [registry](https://docs.docker.com/registry/deploying/)
 
 
