@@ -19,7 +19,7 @@ testers:
       ansible_host: localhost
       ansible_user: vegeta
       interface: enp4s0
-      address_benchmark: 192.168.1.11
+      address_benchmark: 192.168.1.247
       num_workers: 1
       vagrant:
         vm_cpu: 2

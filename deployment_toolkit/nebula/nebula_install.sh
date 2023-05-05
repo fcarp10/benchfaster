@@ -6,6 +6,8 @@ ARCH=$3
 NEBULA_WORKER=$4
 NEBULA_LIGHTHOUSE_IF=$5
 
+sed -i '/lighthouse/d' /etc/hosts
+
 if [ $NEBULA_WORKER = "lighthouse" ]; then echo `ip addr sh $NEBULA_LIGHTHOUSE_IF | grep 'inet ' | awk '{print substr($2, 1, length($2)-3)}'` > $2/benchfaster/lighthouse.ip ; fi
 echo $(cat $2/benchfaster/lighthouse.ip) lighthouse | tee -a /etc/hosts
 
