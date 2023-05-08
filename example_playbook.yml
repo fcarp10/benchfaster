@@ -4,6 +4,7 @@
     - name: Set toolkit directory
       ansible.builtin.set_fact:
         toolkit_dir: "{{ playbook_dir }}/deployment_toolkit"
+        tests_dir: "{{ playbook_dir }}/performance_tests"
 
     - name: Generate Nebula certificates
       ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
@@ -32,18 +33,8 @@
       when: hvm is defined
     
     - name: Run helloworld test with JMeter
-      ansible.builtin.shell: |
-        jmeter -n -t {{ playbook_dir }}/performance_tests/helloworld/helloworld_test.jmx \ 
-          -Jrequest.ip={{ address_benchmark }} \
-          -Jrequest.port={{ openfaas.openfaas_port }} \
-          -Jtest.iterations=100 \
-          -l {{ results_path.path }}/results_jmeter.csv
+      ansible.builtin.include_tasks: "{{ tests_dir }}/helloworld/helloworld_jmeter.yml"
 
     - name: Run helloworld test with K6
-      ansible.builtin.shell: |
-        k6 run {{ playbook_dir }}/performance_tests/helloworld/helloworld_test.js \
-          -e HOST={{ address_benchmark }} \
-          -e PORT={{ openfaas.openfaas_port }} \
-          --iterations 100 \
-          -o csv={{ results_path.path }}/results_k6.csv
+      ansible.builtin.include_tasks: "{{ tests_dir }}/helloworld/helloworld_k6.yml"
 
