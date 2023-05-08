@@ -2,7 +2,7 @@
   hosts: testers
   tasks:
 
-    - name: Install requirements (only Ubuntu 22.04)
+    - name: Install requirements (Ubuntu 22.04)
       ansible.builtin.apt:
         pkg:
           - jmeter
@@ -10,20 +10,24 @@
       become: true
       when: ansible_facts['distribution']=="Ubuntu"
 
-    # - name: Install requirements (only Ubuntu 22.04) # Install Nebula on Ubuntu 22.04 (TO-DO)
+    # - name: Install requirements (Ubuntu 22.04) # Install Nebula on Ubuntu 22.04 (TO-DO)
     #   ansible.builtin.shell: |
     #     sudo wget ...
     #   become: true
     #   when: ansible_facts['distribution']=="Ubuntu"
 
-    - name: Install requirements (only Archlinux, with paru) # nebula only to generate certs
-      community.general.pacman:
-        pkg:
-          - jmeter
-          - nebula
-          - k6-bin
-        state: present
-        executable: paru
+    - name: Install requirements (Archlinux) 
+      ansible.builtin.command: paru -S --noconfirm --needed {{ item }}
+      with_items:
+        - jmeter
+        - nebula # only to generate certs
+        - k6-bin
+      when: ansible_facts['distribution']=="Archlinux"
+
+    - name: Install JMeter MQTT plugin
+      ansible.builtin.get_url:
+        url: https://github.com/emqx/mqtt-jmeter/releases/download/v2.0.2/mqtt-xmeter-2.0.2-jar-with-dependencies.jar
+        dest: /opt/jmeter/lib/ext
       become: true
       when: ansible_facts['distribution']=="Archlinux"
 
