@@ -2,4 +2,3 @@ __pycache__
 jmeter.log
 _results/
 cert/
-inventory*.yml

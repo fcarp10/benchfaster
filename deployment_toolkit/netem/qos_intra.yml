@@ -1,10 +1,12 @@
 - name: Apply QoS to all nodes
   ansible.builtin.shell: |
-    ssh -n root@{{ hostvars[groups.machines[item]].ansible_host }} "sudo tc qdisc delete dev {{ hostvars[groups.machines[item]].interface }} root"
+    ssh -n root@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc delete dev {{ hostvars[groups.machines[machine_item]].interface }} root"
     if [[ {{ netem.delay_intra }} != "null" && {{ netem.delay_intra }} != 0 && {{ netem.variance_intra }} != "null" && {{ netem.variance_intra }} != 0 && {{ netem.loss_intra }} != "null" && {{ netem.loss_intra }} != 0 ]]; then
-      echo "Applying QoS [interface: {{ hostvars[groups.machines[item]].interface }}, delay: {{ netem.delay_intra }}ms, variance: {{ netem.variance_intra }}ms, loss: {{ netem.loss_intra }}%]..." >> {{ results_path.path }}/logs.txt
-      ssh -n root@{{ hostvars[groups.machines[item]].ansible_host }} "sudo tc qdisc add dev {{ hostvars[groups.machines[item]].interface }} root netem delay {{ netem.delay_intra }}ms {{ netem.variance_intra }}ms distribution normal loss {{ netem.loss_intra }}%"
+      echo "Applying QoS [interface: {{ hostvars[groups.machines[machine_item]].interface }}, delay: {{ netem.delay_intra }}ms, variance: {{ netem.variance_intra }}ms, loss: {{ netem.loss_intra }}%]..." >> {{ results_path.path }}/logs.txt
+      ssh -n root@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc add dev {{ hostvars[groups.machines[machine_item]].interface }} root netem delay {{ netem.delay_intra }}ms {{ netem.variance_intra }}ms distribution normal loss {{ netem.loss_intra }}%"
     else
       echo "No QoS to apply" >> {{ results_path.path }}/logs.txt
     fi
   loop: "{{ range(0, groups.machines|length, 1)|list }}"
+  loop_control:
+    loop_var: machine_item

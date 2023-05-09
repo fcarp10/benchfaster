@@ -50,15 +50,13 @@ BenchFaster consist on four type of nodes:
 Two operation modes are possible in BenchFaster:
 
 - Hosts mode: Head/worker nodes are remote systems.
-
 - Hypervisor mode: Head/worker nodes are deployed on VMs with libvirt/KVM.
 
 
 ## Inventory
 
-Modify the existing ansible `inventory.yml` file or create a new one with the
-list of all hosts. Two categories of hosts are expected: `machines` and
-`testers`. 
+Two categories of hosts are expected in the Ansible inventory file: `machines`
+and `testers`. 
 
 Common parameters:
 - `ansible_host`: Name of the host to connect from the ansible control node
@@ -77,12 +75,12 @@ Testers:
 - `vagrant.vm_mem`: Amount of RAM per VM (required only in hypervisor mode)
 - `vagrant.vm_image`: Name of the Vagrant box (required only in hypervisor mode)
 - `openfaas.openfaas_functions`: List of OpenFaaS functions to deploy
-- `netem.delay_intra`: intra node delay in ms
-- `netem.variance_intra`: intra node delay variance in ms
-- `netem.loss_intra`: intra node loss probability in %
-- `netem.delay_tm`: from tester to head node delay in ms
-- `netem.variance_tm`: from tester to head node variance in ms
-- `netem.loss_tm`: from tester to head node loss probability in %
+- `netem.delay_intra`: Intra node delay in ms
+- `netem.variance_intra`: Intra node delay variance in ms
+- `netem.loss_intra`: Intra node loss probability in %
+- `netem.delay_tm`: From tester to head node delay in ms
+- `netem.variance_tm`: From tester to head node variance in ms
+- `netem.loss_tm`: From tester to head node loss probability in %
 
 
 ## Install Requirements
@@ -90,17 +88,20 @@ Testers:
 Install the requirements for each type of node with:
 
 ```shell
-ansible-playbook --ask-become-pass -i inventory.yml requirements/${REQ_FILE}.yml
+ansible-playbook --ask-become-pass -i inventory/inventory_example1.yml requirements/${REQ_FILE}.yml
 ```
 where `REQ_FILE` is either `machine`, `tester` or `hypervisor`.
 
 
 ## Run hello-world test
 
-Run a hello-world test with:
+Run a hello-world example with:
 
 ```shell
-ansible-playbook -i inventory.yml helloworld.yml
+ansible-playbook -i inventory/inventory_example1.yml playbook_example.yml
 ```
 
-When using a hypervisor, add `--extra-vars "hvm=true"` to the previous command.
+Optional variables (`-e "key=value"`):
+  - `hvm=true`: When using a hypervisor
+  - `repetitions=N`: Number of repetitions of a certain workflow
+

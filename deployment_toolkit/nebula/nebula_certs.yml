@@ -20,6 +20,7 @@
   loop: "{{ range(0, groups.machines|length, 1)|list }}"
   loop_control:
     index_var: i
-  when: hostvars[groups.machines[item]].headnode is not defined
+    loop_var: worker_item
+  when: hostvars[groups.machines[worker_item]].headnode is not defined
   args:
     chdir: "{{ toolkit_dir }}/nebula/config/cert/"

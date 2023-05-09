@@ -21,10 +21,10 @@
   ansible.builtin.shell: |
     sh {{ toolkit_dir }}/main.sh \
       --opt k3s \
-      --address {{ hostvars[groups.machines[item]].ansible_host }} \
+      --address {{ hostvars[groups.machines[worker_item]].ansible_host }} \
       --user root \ 
-      --workpath /home/{{ hostvars[groups.machines[item]].ansible_user }}/ \ 
-      --interface {{ hostvars[groups.machines[item]].interface }} \
+      --workpath /home/{{ hostvars[groups.machines[worker_item]].ansible_user }}/ \ 
+      --interface {{ hostvars[groups.machines[worker_item]].interface }} \
       --k3s-port {{ k3s.k3s_port }} \ 
       --k3s-version {{ k3s.k3s_version }} \ 
       --k3s-token {{ k3s_token.stdout }} \
@@ -32,7 +32,9 @@
   args:
     executable: /bin/bash
   loop: "{{ range(0, groups.machines|length, 1)|list }}"
-  when: hostvars[groups.machines[item]].headnode is not defined
+  loop_control:
+    loop_var: worker_item
+  when: hostvars[groups.machines[worker_item]].headnode is not defined
 
 - name: Wait for K3s workers to join 
   ansible.builtin.shell: |

@@ -4,7 +4,8 @@
   loop: "{{ range(0, groups.machines|length, 1)|list }}"
   loop_control:
     index_var: i
-  when: hostvars[groups.machines[item]].headnode is defined
+    loop_var: headnode_item
+  when: hostvars[groups.machines[headnode_item]].headnode is defined
   
 - name: Set global vars
   ansible.builtin.set_fact:
@@ -20,8 +21,10 @@
   ansible.builtin.shell: |
     sh {{ toolkit_dir }}/main.sh \
       --opt copy \
-      --address {{ hostvars[groups.machines[item]].ansible_host }} \
-      --user {{ hostvars[groups.machines[item]].ansible_user }} \ 
-      --workpath /home/{{ hostvars[groups.machines[item]].ansible_user }}/ \ 
+      --address {{ hostvars[groups.machines[machine_item]].ansible_host }} \
+      --user {{ hostvars[groups.machines[machine_item]].ansible_user }} \ 
+      --workpath /home/{{ hostvars[groups.machines[machine_item]].ansible_user }}/ \ 
       >> {{ results_path.path }}/logs.txt
   loop: "{{ range(0, groups.machines|length, 1)|list }}"
+  loop_control:
+    loop_var: machine_item
