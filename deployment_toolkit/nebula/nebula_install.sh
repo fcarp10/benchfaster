@@ -21,25 +21,25 @@ done
 cd $TMP
 tar xvfz nebula-linux-$ARCH.tar.gz
 rm $TMP/nebula-linux-$ARCH.tar.gz
-mv $TMP/nebula /usr/local/bin/
-mv $TMP/nebula-cert /usr/local/bin/
+sudo mv $TMP/nebula /usr/local/bin/
+sudo mv $TMP/nebula-cert /usr/local/bin/
 
 # Copying the configuration files and certificates
-rm -rf /etc/nebula
-mkdir -p /etc/nebula
+sudo rm -rf /etc/nebula
+sudo mkdir -p /etc/nebula
 if [ $NEBULA_WORKER = "lighthouse" ]; then
     echo "Installing nebula lighthouse..."
-    cp $NEBULA_CONFIG/lighthouse.yml /etc/nebula/nebula.yml
+    sudo cp $NEBULA_CONFIG/lighthouse.yml /etc/nebula/nebula.yml
 else
     echo "Installing nebula client..."
-    cp $NEBULA_CONFIG/worker.yml /etc/nebula/nebula.yml
+    sudo cp $NEBULA_CONFIG/worker.yml /etc/nebula/nebula.yml
 fi
-cp $NEBULA_CONFIG/cert/$NEBULA_WORKER.crt /etc/nebula/nebula.crt
-cp $NEBULA_CONFIG/cert/$NEBULA_WORKER.key /etc/nebula/nebula.key
-cp $NEBULA_CONFIG/cert/ca.crt /etc/nebula/
+sudo cp $NEBULA_CONFIG/cert/$NEBULA_WORKER.crt /etc/nebula/nebula.crt
+sudo cp $NEBULA_CONFIG/cert/$NEBULA_WORKER.key /etc/nebula/nebula.key
+sudo cp $NEBULA_CONFIG/cert/ca.crt /etc/nebula/
 
 # Creating and starting the service
-cat << EOF > /etc/systemd/system/nebula.service
+sudo cat << EOF > /etc/systemd/system/nebula.service
 [Unit]
 Description=nebula
 Wants=basic.target
@@ -57,6 +57,6 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
-systemctl restart nebula
+sudo systemctl daemon-reload
+sudo systemctl restart nebula
 
