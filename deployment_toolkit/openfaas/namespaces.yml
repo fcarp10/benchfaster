@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   name: openfaas
   annotations:
-    scheduler.alpha.kubernetes.io/node-selector: env=ingress
+    scheduler.alpha.kubernetes.io/node-selector: node-role.kubernetes.io/control-plane=true
     linkerd.io/inject: enabled
     config.linkerd.io/skip-inbound-ports: "4222"
     config.linkerd.io/skip-outbound-ports: "4222"

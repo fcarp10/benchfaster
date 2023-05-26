@@ -60,13 +60,12 @@ echo "Deploying openfaas..."
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> /home/`whoami`/.bashrc
 WORKERNUMBER=0
-for worker in $(sudo -E kubectl get nodes | grep -v $HOSTNAME | grep -v NAME \
+for worker in $(sudo -E kubectl get nodes | grep -v control-plane | grep -v NAME \
     | sed 's/\s.*$//')
 do
     sudo -E kubectl label node $worker node-role.kubernetes.io/worker=worker
     WORKERNUMBER=$((WORKERNUMBER+1))
 done
-sudo -E kubectl label node $HOSTNAME env=ingress
 curl -sSLf https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 \
     | bash
 sudo -E kubectl apply -f $PWD/openfaas/namespaces.yml
@@ -111,7 +110,7 @@ sudo -E helm upgrade openfaas --install openfaas/openfaas --namespace openfaas \
     --version $OPENFAAS_VERSION
 if [ $? -ne 0 ]; then echo "There was an error while deploying OpenFaaS. Aborting..." \
     && exit 1; fi
-sleep 60
+sleep 120
 if [ "$DEBUG" = 'true' ]; then
     sudo -E kubectl -n openfaas rollout status -w deployment/grafana
     sudo -E kubectl -n openfaas exec -ti deployment/grafana -c grafana -- grafana-cli admin reset-admin-password password
