@@ -38,10 +38,10 @@ BenchFaster consist on four type of nodes:
 
 ## Prerequisites
 
-- `ansible` installed in the control node (can be the same machine as the tester node)
+- Ubuntu Server 22.04 or Arch Linux in all nodes
+- `ansible` installed in the control node (check Ansible node [requirements](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#node-requirement-summary))
 - Passwordless sudo access in all nodes
 - SSH key-based authentication from control node to all other nodes
-- Ubuntu Server 22.04 or Arch Linux in all nodes
 - Raspberry Pis with Ubuntu Server, please check [K3s docs](https://docs.k3s.io/advanced#raspberry-pi) and enable `systemd-timesyncd.service`
 - (Optional) Local container [registry](https://docs.docker.com/registry/deploying/)
 
@@ -89,7 +89,7 @@ Testers:
 Install the requirements for each type of node with:
 
 ```shell
-ansible-playbook --ask-become-pass -i inventory/inventory_example.yml requirements/${REQ_FILE}.yml
+ansible-playbook -i inventory/inventory_example.yml requirements/${REQ_FILE}.yml
 ```
 where `REQ_FILE` is either `machine`, `tester` or `hypervisor`.
 
