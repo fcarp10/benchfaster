@@ -1,11 +1,44 @@
 - name: Hello-world test
   hosts: testers
   vars: 
-    repetitions: 1
-  tasks:
+    netem:
+      - name: cloud
+        delay_intra: 0
+        variance_intra: 0
+        loss_intra: 0
+        delay_tm: 12.5
+        variance_tm: 2.5
+        loss_tm: 0.2
+      - name: local
+        delay_intra: 0    # (T_lat_cld/5)/2 (ms)
+        variance_intra: 0 # (T_var_cld/5)/2 (ms)
+        loss_intra: 0     # (T_loss/5)/2 (%)
+        delay_tm: 0       # (T_lat_cld/5)/2 (ms)
+        variance_tm: 0    # (T_var_cld/5)/2 (ms)
+        loss_tm: 0        # (T_loss/5)/2 (%)
+      - name: worst
+        delay_intra: 3.125    # (T_lat_cld/2)/2 (ms)
+        variance_intra: 0.625 # (T_var_cld/2)/2 (ms)
+        loss_intra: 0.05      # (T_loss_cld/2)/2 (%)
+        delay_tm: 3.125       # (T_lat_cld/N)/2 (ms)
+        variance_tm: 0.625    # (T_var_cld/N)/2 (ms)
+        loss_tm: 0.05         # (T_loss_cld/N)/2 (%)
+      - name: optimal
+        delay_intra: 1.25     # (T_lat_cld/5)/2 (ms)
+        variance_intra: 0.25  # (T_var_cld/5)/2 (ms)
+        loss_intra: 0.02      # (T_loss/5)/2 (%)
+        delay_tm: 1.25        # (T_lat_cld/5)/2 (ms)
+        variance_tm: 0.25     # (T_var_cld/5)/2 (ms)
+        loss_tm: 0.02         # (T_loss/5)/2 (%)
 
+  tasks:
+    - name: Set global vars
+      ansible.builtin.set_fact:
+        foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
+        filesuffix: "2rpi"
     - name: Run deployment workflow
       ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment_workflow/workflow_example1.yml"
-      with_sequence: count={{ repetitions }}
+      with_items:
+        - "{{ netem }}"
 
 

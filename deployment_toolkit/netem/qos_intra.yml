@@ -1,9 +1,13 @@
-- name: Apply QoS to all nodes
+- name: Apply QoS set "{{ item.name }}" to all nodes
   ansible.builtin.shell: |
-    ssh -n {{ hostvars[groups.machines[worker_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc delete dev {{ hostvars[groups.machines[machine_item]].interface }} root"
-    if [[ {{ netem.delay_intra }} != "null" && {{ netem.delay_intra }} != 0 && {{ netem.variance_intra }} != "null" && {{ netem.variance_intra }} != 0 && {{ netem.loss_intra }} != "null" && {{ netem.loss_intra }} != 0 ]]; then
-      echo "Applying QoS [interface: {{ hostvars[groups.machines[machine_item]].interface }}, delay: {{ netem.delay_intra }}ms, variance: {{ netem.variance_intra }}ms, loss: {{ netem.loss_intra }}%]..." >> {{ results_path.path }}/logs.txt
-      ssh -n {{ hostvars[groups.machines[worker_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc add dev {{ hostvars[groups.machines[machine_item]].interface }} root netem delay {{ netem.delay_intra }}ms {{ netem.variance_intra }}ms distribution normal loss {{ netem.loss_intra }}%"
+    ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc delete dev {{ hostvars[groups.machines[machine_item]].interface }} root"
+    echo "Reading QoS: {{ item.delay_intra }} | {{ item.variance_intra }} | {{ item.loss_intra }}" >> {{ results_path.path }}/logs.txt
+    DEL_INTRA={{ item.delay_intra }}
+    VAR_INTRA={{ item.variance_intra }}
+    LOS_INTRA={{ item.loss_intra }}
+    if [ {{ item.delay_intra }} != "null"] ] && [ {{ item.variance_intra }} != "null"] && [ {{ item.loss_intra }} != "null"]; then
+      echo "Applying QoS [interface: {{ hostvars[groups.machines[machine_item]].interface }}, delay: ${DEL_INTRA}ms, variance: ${VAR_INTRA}ms, loss: ${LOS_INTRA}%]..." >> {{ results_path.path }}/logs.txt
+      ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc add dev {{ hostvars[groups.machines[machine_item]].interface }} root item delay ${DEL_INTRA}ms ${VAR_INTRA}ms distribution normal loss ${LOS_INTRA}%"
     else
       echo "No QoS to apply" >> {{ results_path.path }}/logs.txt
     fi

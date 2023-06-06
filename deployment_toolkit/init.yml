@@ -6,14 +6,10 @@
     index_var: i
     loop_var: headnode_item
   when: hostvars[groups.machines[headnode_item]].headnode is defined
-  
-- name: Set global vars
-  ansible.builtin.set_fact:
-    date: "{{ lookup('pipe', 'date +%-d-%-m-%Y_%H-%M-%S') }}"
 
 - name: Create results directory
   ansible.builtin.file:
-    path: "{{ playbook_dir }}/_results/{{ date }}"
+    path: "{{ playbook_dir }}/_results/{{ foldername }}"
     state: directory
   register: results_path
 
