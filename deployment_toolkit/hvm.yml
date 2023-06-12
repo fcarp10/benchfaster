@@ -7,7 +7,7 @@
 
 - name: Deploy BenchFaster in hypervisor
   ansible.builtin.shell: |
-    sh {{ toolkit_dir }}/main.sh \
+    bash {{ toolkit_dir }}/main.sh \
       --opt vagrant \
       --address {{ hypervisor.ansible_host }} \
       --user {{ hypervisor.ansible_user }} \
