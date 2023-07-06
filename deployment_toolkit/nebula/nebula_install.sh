@@ -6,7 +6,7 @@ ARCH=$3
 NEBULA_WORKER=$4
 NEBULA_LIGHTHOUSE_IF=$5
 
-sed -i '/lighthouse/d' /etc/hosts
+sudo sed -i '/lighthouse/d' /etc/hosts
 
 if [ $NEBULA_WORKER = "lighthouse" ]; then echo `ip addr sh $NEBULA_LIGHTHOUSE_IF | grep 'inet ' | awk '{print substr($2, 1, length($2)-3)}'` > $2/benchfaster/lighthouse.ip ; fi
 echo $(cat $2/benchfaster/lighthouse.ip) lighthouse | tee -a /etc/hosts
@@ -39,7 +39,7 @@ sudo cp $NEBULA_CONFIG/cert/$NEBULA_WORKER.key /etc/nebula/nebula.key
 sudo cp $NEBULA_CONFIG/cert/ca.crt /etc/nebula/
 
 # Creating and starting the service
-sudo cat << EOF > /etc/systemd/system/nebula.service
+cat << EOF | sudo tee /etc/systemd/system/nebula.service
 [Unit]
 Description=nebula
 Wants=basic.target
