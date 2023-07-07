@@ -5,19 +5,25 @@ machines:
       ansible_user: ubuntu
       interface: enp10s0
       arch: amd64
+      headnode: true
       
     machine02:
       ansible_host: 192.168.1.35
       ansible_user: ubuntu
       interface: enx00e04c304b52
       arch: amd64
-
+    
     machine03:
-      ansible_host: notelab1.icos-project.eu
+      ansible_host: 192.168.1.83
       ansible_user: ubuntu
       interface: eth0
-      arch: amd64
-      headnode: true
+      arch: arm64
+
+    # machine04:
+    #   ansible_host: notelab1.icos-project.eu
+    #   ansible_user: ubuntu
+    #   interface: eth0
+    #   arch: amd64
 
 testers:
   hosts:
@@ -25,7 +31,7 @@ testers:
       ansible_host: localhost
       ansible_user: vegeta
       interface: enp4s0
-      address_benchmark: notelab1.icos-project.eu
+      address_benchmark: 192.168.1.247
       num_workers: 2
       vagrant:
         vm_cpu: 2
