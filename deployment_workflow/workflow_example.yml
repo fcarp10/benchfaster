@@ -1,0 +1,104 @@
+- name: Set toolkit directory
+  ansible.builtin.set_fact:
+    toolkit_dir: "{{ playbook_dir }}/deployment_toolkit"
+    tests_dir: "{{ playbook_dir }}/performance_tests"
+
+- name: Create results directory
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/_results/{{ foldername }}"
+    state: directory
+  register: results_path
+
+      #- name: Generate Nebula certificates
+      #  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+      #  when: 
+      #    - "'hypervisors' not in groups"
+      #
+      #- name: Initialize BenchFaster
+      #  ansible.builtin.include_tasks: "deployment_toolkit/init.yml"
+      #
+      #- name: Deploy Nebula network
+      #  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_network_mm.yml"
+      #  when: 
+      #    - "'hypervisors' not in groups"
+
+- name: Deploy VMs
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/hvm.yml"
+  args:
+    apply:
+      delegate_to: "{{ current_hv }}"
+      delegate_facts: true
+  loop: "{{ groups['hypervisors'] }}"
+  loop_control:
+    loop_var: current_hv
+  when: "'hypervisors' in groups"
+
+- name: Generate nebula certificates
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+
+- name: Copy nebula certificates
+  copy:
+    src: "{{ toolkit_dir }}/nebula"
+    dest: /tmp/benchfaster/
+ 
+- name: Register headnode (VM)
+  ansible.builtin.set_fact:
+    headnode: "{{ hostvars[groups.vms[i]] }}"
+  loop: "{{ groups['vms'] }}"
+  loop_control:
+    index_var: i
+    loop_var: headnode_item
+  when:
+    - "hostvars[headnode_item].headnode is defined"
+
+- name: Install nebula on headnode (VM)
+  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ headnode.arch }} lighthouse"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['vms'] }}"
+  loop_control:
+    loop_var: current_host
+  when: 
+    - "'hypervisors' in groups"
+    - "hostvars[current_host].headnode is defined"
+
+- name: Install Nebula on workers (VM)
+  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[current_host].arch }} {{ hostvars[current_host].inventory_hostname }} {{ headnodeip }}"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['vms'] }}"
+  loop_control:
+    loop_var: current_host
+  when: 
+    - "'hypervisors' in groups"
+    - "hostvars[current_host].headnode is not defined"
+
+- name: Install k3s on headnode (VM)
+  ansible.builtin.script: "{{ toolkit_dir }}/k3s/k3s_headnode.sh {{ k3s.k3s_version }}"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['vms'] }}"
+  loop_control:
+    loop_var: current_host
+  when: 
+    - "'hypervisors' in groups"
+    - "hostvars[current_host].headnode is defined"
+
+- name: Provision headnode
+  command: hostnamectl
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['machines'] }}"
+  loop_control:
+    loop_var: current_host
+  when: 
+    - "'hypervisors' not in groups"
+
+    #- name: Install OpenFaas on headnode
+    #  ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"
+
+
+      #- name: Apply QoS to all nodes
+      #  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_intra.yml"
+      #
+      #- name: Run helloworld test with JMeter
+      #  ansible.builtin.include_tasks: "{{ tests_dir }}/helloworld/helloworld_jmeter.yml"
+      #
+      #- name: Run helloworld test with K6
+      #  ansible.builtin.include_tasks: "{{ tests_dir }}/helloworld/helloworld_k6.yml"

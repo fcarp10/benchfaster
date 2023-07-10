@@ -1,6 +1,20 @@
 - name: Hello-world test
   hosts: testers
-  vars: 
+  vars:
+    node_number: 3
+    nebula: 
+      nebula_version: 1.5.2
+      nebula_address: lighthouse
+      nebula_port: 4242
+    k3s: 
+      k3s_version: v1.23.6+k3s1
+      k3s_port: 6443
+    openfaas:
+      openfaas_version: 10.0.8
+      openfaas_port: 31112
+      openfaas_namespace: openfaas-fn
+      openfaas_functions: hello-world
+      #put a controller into the loop for the pm installation to abort when exceeded
     netem:
       - name: cloud
         delay_intra: 0
@@ -9,36 +23,37 @@
         delay_tm: 12.5
         variance_tm: 2.5
         loss_tm: 0.2
-      - name: local
-        delay_intra: 0    # (T_lat_cld/5)/2 (ms)
-        variance_intra: 0 # (T_var_cld/5)/2 (ms)
-        loss_intra: 0     # (T_loss/5)/2 (%)
-        delay_tm: 0       # (T_lat_cld/5)/2 (ms)
-        variance_tm: 0    # (T_var_cld/5)/2 (ms)
-        loss_tm: 0        # (T_loss/5)/2 (%)
-      - name: worst
-        delay_intra: 3.125    # (T_lat_cld/2)/2 (ms)
-        variance_intra: 0.625 # (T_var_cld/2)/2 (ms)
-        loss_intra: 0.05      # (T_loss_cld/2)/2 (%)
-        delay_tm: 3.125       # (T_lat_cld/N)/2 (ms)
-        variance_tm: 0.625    # (T_var_cld/N)/2 (ms)
-        loss_tm: 0.05         # (T_loss_cld/N)/2 (%)
-      - name: optimal
-        delay_intra: 1.25     # (T_lat_cld/5)/2 (ms)
-        variance_intra: 0.25  # (T_var_cld/5)/2 (ms)
-        loss_intra: 0.02      # (T_loss/5)/2 (%)
-        delay_tm: 1.25        # (T_lat_cld/5)/2 (ms)
-        variance_tm: 0.25     # (T_var_cld/5)/2 (ms)
-        loss_tm: 0.02         # (T_loss/5)/2 (%)
+          #      - name: local
+          #        delay_intra: 0    # (T_lat_cld/5)/2 (ms)
+          #        variance_intra: 0 # (T_var_cld/5)/2 (ms)
+          #        loss_intra: 0     # (T_loss/5)/2 (%)
+          #        delay_tm: 0       # (T_lat_cld/5)/2 (ms)
+          #        variance_tm: 0    # (T_var_cld/5)/2 (ms)
+          #        loss_tm: 0        # (T_loss/5)/2 (%)
+          #      - name: worst
+          #        delay_intra: 3.125    # (T_lat_cld/2)/2 (ms)
+          #        variance_intra: 0.625 # (T_var_cld/2)/2 (ms)
+          #        loss_intra: 0.05      # (T_loss_cld/2)/2 (%)
+          #        delay_tm: 3.125       # (T_lat_cld/N)/2 (ms)
+          #        variance_tm: 0.625    # (T_var_cld/N)/2 (ms)
+          #        loss_tm: 0.05         # (T_loss_cld/N)/2 (%)
+          #      - name: optimal
+          #        delay_intra: 1.25     # (T_lat_cld/5)/2 (ms)
+          #        variance_intra: 0.25  # (T_var_cld/5)/2 (ms)
+          #        loss_intra: 0.02      # (T_loss/5)/2 (%)
+          #        delay_tm: 1.25        # (T_lat_cld/5)/2 (ms)
+          #        variance_tm: 0.25     # (T_var_cld/5)/2 (ms)
+          #        loss_tm: 0.02         # (T_loss/5)/2 (%)
 
   tasks:
     - name: Set global vars
       ansible.builtin.set_fact:
         foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
-        filesuffix: "2rpi"
+        filesuffix: "rpi"
     - name: Run deployment workflow
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment_workflow/workflow_example1.yml"
-      with_items:
-        - "{{ netem }}"
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment_workflow/workflow_example.yml"
+      loop: "{{ netem }}"
+      loop_control:
+        loop_var: qos_set
 
 

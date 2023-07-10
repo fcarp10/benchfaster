@@ -1,3 +1,16 @@
+hypervisors:
+  hosts:
+    machineHV:
+      ansible_host: 192.168.1.50
+      ansible_user: marc
+      interface: enp179s0
+      arch: amd64
+      num_workers: 2
+      vagrant:
+        vm_cpu: 2
+        vm_mem: 4096
+        vm_image: "generic/ubuntu2004"
+
 machines:
   hosts:
     machine01:
@@ -26,7 +39,7 @@ testers:
       ansible_host: localhost
       ansible_user: user
       interface: enp6s0
-      address_benchmark: 192.168.1.20
+      address_benchmark: 192.168.1.225
       num_workers: 2
       vagrant:
         vm_cpu: 2

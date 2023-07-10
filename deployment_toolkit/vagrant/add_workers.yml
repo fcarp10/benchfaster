@@ -1,0 +1,32 @@
+- name: Identify worker
+  ansible.builtin.debug:
+    msg: worker{{ vm_worker_index }}
+
+- name:  Fetching the worker{{ vm_worker_index }} key from remote hypervisor
+  fetch:
+    src: "/tmp/benchfaster/.vagrant/machines/worker{{ vm_worker_index }}/libvirt/private_key"
+    dest: "{{ toolkit_dir }}/_key/worker{{ vm_worker_index }}.key"
+    flat: yes
+    validate_checksum: false
+
+- name: Determine worker{{ vm_worker_index }} IP
+  shell:
+    cmd: vagrant ssh worker{{ vm_worker_index }} -c "ip addr sh eth0 | grep 'inet ' | awk '{print substr(\$2, 1, length(\$2)-3)}'"
+    chdir: /tmp/benchfaster/
+  register: workerip
+
+- name: Register worker IP
+  set_fact:
+    ipaddress: "{{ workerip.stdout }}"
+
+- name: Add worker VM to inventory
+  ansible.builtin.add_host:
+    name: "worker{{ vm_worker_index }}"
+    groups: vms
+    arch: amd64
+    ansible_port: 22
+    ansible_ssh_host: "{{ workerip.stdout }}"
+    ansible_user: vagrant                                                        
+    ansible_ssh_extra_args: -o StrictHostKeyChecking=no -J {{ hostvars[current_hv].ansible_user }}@{{ hostvars[current_hv].ansible_host }} 
+    ansible_ssh_private_key_file: "{{ toolkit_dir }}/_key/worker{{ vm_worker_index }}.key"
+    host_key_checking: False

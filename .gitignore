@@ -3,3 +3,5 @@ jmeter.log
 _results/
 cert/
 .vscode/
+*.swp
+_key

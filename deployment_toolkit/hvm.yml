@@ -1,41 +1,106 @@
-- name: Set global vars
+- name: detected hypervisor
+  command: hostnamectl
+
+- name: Copy Vagrant file
+  copy:
+    src: "{{ toolkit_dir }}/{{ item }}"
+    dest: /tmp/benchfaster/
+  with_items:
+    - vagrant/Vagrantfile
+    - vagrant/environment.rb
+
+- name: configure Vagrant interface
+  ansible.builtin.lineinfile:
+    path: /tmp/benchfaster/environment.rb
+    regexp: '$INTERFACE ='
+    insertafter: 'module Variables'
+    line: '    $INTERFACE = "{{ hostvars[current_hv].interface }}"'
+
+- name: configure Vagrant image
+  ansible.builtin.lineinfile:
+    path: /tmp/benchfaster/environment.rb
+    regexp: '$VM_IMAGE ='
+    insertafter: 'module Variables'
+    line: '    $VM_IMAGE = "{{ vagrant.vm_image }}"'
+
+- name: configure Vagrant address
+  ansible.builtin.lineinfile:
+    path: /tmp/benchfaster/environment.rb
+    regexp: '$ADDRESS_BENCHMARK ='
+    insertafter: 'module Variables'
+    line: '    $ADDRESS_BENCHMARK = "{{ address_benchmark }}"'
+
+- name: configure Vagrant memory
+  ansible.builtin.lineinfile:
+    path: /tmp/benchfaster/environment.rb
+    regexp: '$VM_MEM ='
+    insertafter: 'module Variables'
+    line: '    $VM_MEM = "{{ vagrant.vm_mem }}"'
+
+- name: configure Vagrant CPUs
+  ansible.builtin.lineinfile:
+    path: /tmp/benchfaster/environment.rb
+    regexp: '$VM_CPU ='
+    insertafter: 'module Variables'
+    line: '    $VM_CPU = "{{ vagrant.vm_cpu }}"'
+
+- name: configure number of Vagrant machines
+  ansible.builtin.lineinfile:
+    path: /tmp/benchfaster/environment.rb
+    regexp: '$NUM_WORKERS ='
+    insertafter: 'module Variables'
+    line: '    $NUM_WORKERS = {{ node_number }}'
+
+#- name: destroy old Vagrant machines
+#  ansible.builtin.script: "{{ toolkit_dir }}/vagrant/destroy_machines.sh /tmp/benchfaster"
+
+- name: start Vagrant machines
+  shell:                                                                                                
+    cmd: vagrant up
+    chdir: /tmp/benchfaster/
+
+- name:  Fetching a headnode key from remote hypervisor
+  fetch:
+    src: "/tmp/benchfaster/.vagrant/machines/headnode/libvirt/private_key"
+    dest: "{{ toolkit_dir }}/_key/headnode.key"
+    flat: yes
+    validate_checksum: false
+
+- name: Determine headnode IP
+  shell:
+    cmd: vagrant ssh headnode -c "ip addr sh eth0 | grep 'inet ' | awk '{print substr(\$2, 1, length(\$2)-3)}'"
+    chdir: /tmp/benchfaster/
+  register: headnodeip
+
+- name: Register headnode IP
+  set_fact:
+    ipaddress: "{{ headnodeip.stdout }}"
+
+- name: Add headnode VM to inventory
+  ansible.builtin.add_host:
+    name: headnode
+    interface: eth0
+    arch: amd64
+    groups: vms
+    headnode: true
+    ansible_port: 22
+    ansible_ssh_host: "{{ headnodeip.stdout }}"
+    ansible_user: vagrant                                                        
+    ansible_ssh_extra_args: -o StrictHostKeyChecking=no -J {{ hostvars[current_hv].ansible_user }}@{{ hostvars[current_hv].ansible_host }} 
+    ansible_ssh_private_key_file: "{{ toolkit_dir }}/_key/headnode.key"
+    host_key_checking: False
+
+- name: Add VM workers to inventory
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/vagrant/add_workers.yml"
+  loop: "{{ range(1, num_workers + 1, 1)|list }}"
+  loop_control: 
+    loop_var: vm_worker_index
+
+- name: Register headnode
   ansible.builtin.set_fact:
-    hypervisor: "{{ headnode }}"
-
-- name: Generate nebula certificates
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
-
-- name: Deploy BenchFaster in hypervisor
-  ansible.builtin.shell: |
-    bash {{ toolkit_dir }}/main.sh \
-      --opt vagrant \
-      --address {{ hypervisor.ansible_host }} \
-      --user {{ hypervisor.ansible_user }} \
-      --workpath /home/{{ hypervisor.ansible_user }}/ \ 
-      --interface {{ hypervisor.interface }} \ 
-      --address-benchmark {{ address_benchmark }} \
-      --num-workers {{ num_workers }} \
-      --interface-tm {{ interface }} \
-      --vm-cpu {{ vagrant.vm_cpu }} \
-      --vm-mem {{ vagrant.vm_mem }} \ 
-      --vm-image {{ vagrant.vm_image }} \
-      --nebula-version {{ nebula.nebula_version }} \ 
-      --nebula-address {{ nebula.nebula_address }} \ 
-      --nebula-port {{ nebula.nebula_port }} \ 
-      --k3s-version {{ k3s.k3s_version }} \ 
-      --k3s-port {{ k3s.k3s_port }} \ 
-      --openfaas-version {{ openfaas.openfaas_version }} \ 
-      --openfaas-port {{ openfaas.openfaas_port }} \ 
-      --openfaas-namespace {{ openfaas.openfaas_namespace }} \ 
-      --openfaas-functions {{ openfaas.openfaas_functions }} \ 
-      --delay-tm {{ item.delay_tm }} \ 
-      --variance-tm {{ item.variance_tm }} \ 
-      --loss-tm {{ item.loss_tm }} \ 
-      --delay-intra {{ item.delay_intra }} \ 
-      --variance-intra {{ item.variance_intra }} \ 
-      --loss-intra {{ item.loss_intra }} \ 
-      >> {{ results_path.path }}/logs.txt
-
-
-
-
+    headnode: "{{ hostvars[groups.vms[i]] }}"
+  loop: "{{ range(0, groups.machines|length, 1)|list }}"
+  loop_control:
+    index_var: i
+    loop_var: headnode_item
+  when: hostvars[groups.machines[headnode_item]].headnode is defined
