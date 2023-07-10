@@ -5,9 +5,9 @@
     DEL_INTRA={{ item.delay_intra }}
     VAR_INTRA={{ item.variance_intra }}
     LOS_INTRA={{ item.loss_intra }}
-    if [ {{ item.delay_intra }} != "null"] ] && [ {{ item.variance_intra }} != "null"] && [ {{ item.loss_intra }} != "null"]; then
+    if [[ {{ item.delay_intra }} != "null" && {{ item.delay_intra }} != 0 && {{ item.variance_intra }} != "null" && {{ item.variance_intra }} != 0 && {{ item.loss_intra }} != "null" && {{ item.loss_intra }} != 0 ]]; then
       echo "Applying QoS [interface: {{ hostvars[groups.machines[machine_item]].interface }}, delay: ${DEL_INTRA}ms, variance: ${VAR_INTRA}ms, loss: ${LOS_INTRA}%]..." >> {{ results_path.path }}/logs.txt
-      ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc add dev {{ hostvars[groups.machines[machine_item]].interface }} root item delay ${DEL_INTRA}ms ${VAR_INTRA}ms distribution normal loss ${LOS_INTRA}%"
+      ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc add dev {{ hostvars[groups.machines[machine_item]].interface }} root netem delay ${DEL_INTRA}ms ${VAR_INTRA}ms distribution normal loss ${LOS_INTRA}%"
     else
       echo "No QoS to apply" >> {{ results_path.path }}/logs.txt
     fi
