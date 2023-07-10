@@ -3,3 +3,4 @@ jmeter.log
 _results/
 cert/
 .vscode/
+inventory/

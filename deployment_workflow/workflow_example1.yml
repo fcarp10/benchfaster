@@ -22,7 +22,7 @@
   when: hvm is not defined
 
 - name: Apply QoS to all nodes
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_intra.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos.yml"
   when: hvm is not defined
 
 - name: Deploy BenchFaster in hypervisor 
