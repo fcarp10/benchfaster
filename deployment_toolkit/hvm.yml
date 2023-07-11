@@ -7,7 +7,7 @@
 
 - name: Deploy BenchFaster in hypervisor
   ansible.builtin.shell: |
-    sh {{ toolkit_dir }}/main.sh \
+    bash {{ toolkit_dir }}/main.sh \
       --opt vagrant \
       --address {{ hypervisor.ansible_host }} \
       --user {{ hypervisor.ansible_user }} \
@@ -28,12 +28,12 @@
       --openfaas-port {{ openfaas.openfaas_port }} \ 
       --openfaas-namespace {{ openfaas.openfaas_namespace }} \ 
       --openfaas-functions {{ openfaas.openfaas_functions }} \ 
-      --delay-tm {{ netem.delay_tm }} \ 
-      --variance-tm {{ netem.variance_tm }} \ 
-      --loss-tm {{ netem.loss_tm }} \ 
-      --delay-intra {{ netem.delay_intra }} \ 
-      --variance-intra {{ netem.variance_intra }} \ 
-      --loss-intra {{ netem.loss_intra }} \ 
+      --delay-tm {{ item.delay_tm }} \ 
+      --variance-tm {{ item.variance_tm }} \ 
+      --loss-tm {{ item.loss_tm }} \ 
+      --delay-intra {{ item.delay_intra }} \ 
+      --variance-intra {{ item.variance_intra }} \ 
+      --loss-intra {{ item.loss_intra }} \ 
       >> {{ results_path.path }}/logs.txt
 
 

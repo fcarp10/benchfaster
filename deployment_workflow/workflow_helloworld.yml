@@ -10,7 +10,7 @@
   ansible.builtin.include_tasks: "deployment_toolkit/init.yml"
 
 - name: Deploy Nebula network
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_network.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_network_mm.yml"
   when: hvm is not defined
 
 - name: Deploy K3s cluster
@@ -22,7 +22,7 @@
   when: hvm is not defined
 
 - name: Apply QoS to all nodes
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_intra.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos.yml"
   when: hvm is not defined
 
 - name: Deploy BenchFaster in hypervisor 

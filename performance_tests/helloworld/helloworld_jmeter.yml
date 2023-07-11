@@ -4,4 +4,4 @@
       -Jrequest.ip={{ address_benchmark }} \
       -Jrequest.port={{ openfaas.openfaas_port }} \
       -Jtest.iterations=100 \
-      -l {{ results_path.path }}/results_jmeter.csv
+      -l {{ results_path.path }}/helloworld-jmeter_openfaas_{{ filesuffix }}_{{ item.name }}.csv

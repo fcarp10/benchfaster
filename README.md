@@ -44,6 +44,7 @@ BenchFaster consist on four type of nodes:
 - SSH key-based authentication from control node to all other nodes
 - Raspberry Pis with Ubuntu Server, please check [K3s docs](https://docs.k3s.io/advanced#raspberry-pi) and enable `systemd-timesyncd.service`
 - (Optional) Local container [registry](https://docs.docker.com/registry/deploying/)
+- ssh-copy-id user@localhost
 
 
 ## Operation modes

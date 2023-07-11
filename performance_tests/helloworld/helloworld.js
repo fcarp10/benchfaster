@@ -13,6 +13,6 @@ export const options = {
 };
 
 export default function () {
-    const res = http.get(`http://${__ENV.HOST}:${__ENV.PORT}/function/hello-world`);
+    const res = http.get(`http://${__ENV.host}:${__ENV.port}/function/hello-world`);
     sleep(0.05);
 }
