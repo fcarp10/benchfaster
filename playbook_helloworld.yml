@@ -1,0 +1,37 @@
+- name: Hello-world test
+  hosts: testers
+  vars: 
+    netem:
+      - name: qos-empty
+        delay_intra: 0    
+        variance_intra: 0 
+        loss_intra: 0     
+        delay_tm: 0       
+        variance_tm: 0    
+        loss_tm: 0  
+      - name: qos-tester
+        delay_intra: 0
+        variance_intra: 0
+        loss_intra: 0
+        delay_tm: 12.5
+        variance_tm: 2.5
+        loss_tm: 0.2
+      - name: qos-intra-tester
+        delay_intra: 1.25
+        variance_intra: 0.25
+        loss_intra: 0.02 
+        delay_tm: 1.25  
+        variance_tm: 0.25 
+        loss_tm: 0.02
+      
+  tasks:
+    - name: Set global vars
+      ansible.builtin.set_fact:
+        foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
+        filesuffix: "2rpi"
+    - name: Run deployment workflow
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment_workflow/workflow_helloworld.yml"
+      with_items:
+        - "{{ netem }}"
+
+
