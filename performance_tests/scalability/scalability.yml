@@ -3,6 +3,6 @@
     jmeter -n -t {{ tests_dir }}/scalability/scalability.jmx \ 
       -Jrequest.ip={{ address_benchmark }} \
       -Jrequest.port={{ openfaas.openfaas_port }} \
-      -Jtest.argument=1 \
-      -Jtest.threads=500 \
-      -l {{ results_path.path }}/scalability_openfaas_{{ filesuffix }}_{{ item.name }}.csv
+      -Jtest.threads={{ pb_item.1 }} \
+      -Jtest.argument={{ pb_item.2 }} \
+      -l {{ results_path.path }}/scalability-openfaas_A-{{ num_appliances }}_Q-{{ pb_item.0.name }}_T-{{ pb_item.1 }}_L-{{ pb_item.2 }}.csv

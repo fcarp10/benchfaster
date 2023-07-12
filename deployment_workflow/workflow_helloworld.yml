@@ -21,6 +21,10 @@
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"
   when: hvm is not defined
 
+- name: Delete QoS from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"
+  when: hvm is not defined
+
 - name: Apply QoS to all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos.yml"
   when: hvm is not defined
@@ -34,3 +38,8 @@
 
 - name: Run helloworld test with K6
   ansible.builtin.include_tasks: "{{ tests_dir }}/helloworld/helloworld_k6.yml"
+
+- name: Delete QoS from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"
+  when: hvm is not defined
+  

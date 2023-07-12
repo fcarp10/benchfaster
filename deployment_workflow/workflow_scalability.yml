@@ -21,6 +21,10 @@
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"
   when: hvm is not defined
 
+- name: Delete QoS from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"
+  when: hvm is not defined
+
 - name: Apply QoS to all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos.yml"
   when: hvm is not defined
@@ -29,6 +33,10 @@
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/hvm.yml"
   when: hvm is defined
 
-- name: Run helloworld test with JMeter
+- name: Run scalability test with JMeter
   ansible.builtin.include_tasks: "{{ tests_dir }}/scalability/scalability.yml"
+
+- name: Delete QoS from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"
+  when: hvm is not defined
 
