@@ -1,0 +1,15 @@
+- name: Install Nebula
+  hosts: testers
+  tasks:
+    - name: Download Nebula
+      ansible.builtin.get_url:
+        url: https://github.com/slackhq/nebula/releases/download/v{{ nebula.nebula_version }}/nebula-linux-{{ arch }}.tar.gz
+        dest: /tmp
+      become: true
+
+    - name: Install Nebula
+      ansible.builtin.shell: |
+        cd /tmp
+        tar xvfz nebula-linux-{{ arch }}.tar.gz
+        cp /tmp/nebula-cert /usr/local/bin
+      become: true

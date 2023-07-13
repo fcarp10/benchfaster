@@ -19,12 +19,6 @@ machines:
       interface: eth0
       arch: arm64
 
-    # machine04:
-    #   ansible_host: notelab1.icos-project.eu
-    #   ansible_user: ubuntu
-    #   interface: eth0
-    #   arch: amd64
-
 testers:
   hosts:
     tester01:
@@ -32,6 +26,7 @@ testers:
       ansible_user: vegeta
       interface: enp4s0
       address_benchmark: 192.168.1.247
+      arch: amd64
       num_workers: 2
       vagrant:
         vm_cpu: 2

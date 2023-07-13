@@ -1,56 +1,8 @@
-- name: Install tester requirements
-  hosts: testers
-  tasks:
-
-    - name: Install requirements (Ubuntu 22.04)
-      ansible.builtin.apt:
-        pkg:
-          - jmeter
-          - k6
-          - golang-1.18-go
-        state: present
-      become: true
-      when: ansible_facts['distribution']=="Ubuntu"
-
-    - name: Install requirements (Archlinux) 
-      ansible.builtin.command: paru -S --noconfirm --needed {{ item }}
-      with_items:
-        - jmeter
-        - k6-bin
-        - go
-      when: ansible_facts['distribution']=="Archlinux"
-
-    #TODO: this does not work yet, throws no error but xk6 is unusable
-    - name: Build xk6
-      ansible.builtin.command: go install {{ item }}
-      with_items:
-        - go.k6.io/xk6/cmd/xk6@latest
-      environment:
-        GOPATH: /tmp/go
-        GO111MODULE: auto
-
-    - name: Install Go binaries
-      ansible.builtin.shell: |
-        cp /tmp/go/bin/* /usr/local/bin
-      become: true
-
-    - name: Download Nebula
-      ansible.builtin.get_url:
-        url: https://github.com/slackhq/nebula/releases/download/v{{ nebula.nebula_version }}/nebula-linux-{{ arch }}.tar.gz
-        dest: /tmp
-      become: true
-
-    - name: Install Nebula
-      ansible.builtin.shell: |
-        cd /tmp
-        tar xvfz nebula-linux-{{ arch }}.tar.gz
-        cp /tmp/nebula-cert /usr/local/bin
-      become: true
-
-    - name: Install JMeter MQTT plugin
-      ansible.builtin.get_url:
-        url: https://github.com/emqx/mqtt-jmeter/releases/download/v2.0.2/mqtt-xmeter-2.0.2-jar-with-dependencies.jar
-        dest: /opt/jmeter/lib/ext
-      become: true
-      when: ansible_facts['distribution']=="Archlinux"
-
+- name: Install JMeter
+  ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_jmeter.yml"
+- name: Install JMeter plugins
+  ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_jmeter_plugins.yml"
+- name: Install K6
+  ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_k6.yml"
+- name: Install Nebula
+  ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_nebula.yml"

@@ -2,7 +2,7 @@
   hosts: machines
   tasks:
 
-    - name: Install requirements (only Ubuntu 22.04)
+    - name: Install requirements (Ubuntu 22.04)
       ansible.builtin.apt:
         pkg:
         - curl
@@ -37,7 +37,7 @@
         vagrant plugin install vagrant-libvirt
       become: true
 
-    - name: Root privilege requirement for NFS in Vagrant (only Ubuntu 22.04)
+    - name: Root privilege requirement for NFS in Vagrant (Ubuntu 22.04)
       ansible.builtin.blockinfile:
         path: /etc/sudoers.d/vagrant-syncedfolders
         block: |

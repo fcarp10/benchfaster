@@ -1,0 +1,26 @@
+- name: Install JMeter plugins
+  hosts: testers
+  tasks:
+    - name: Install requirements (Ubuntu 22.04) # TO-DO
+      ansible.builtin.apt:
+        pkg:
+        state: present
+      become: true
+      when: ansible_facts['distribution']=="Ubuntu"
+
+    - name: Install requirements (Archlinux)
+      ansible.builtin.command: paru -S --noconfirm --needed {{ item }}
+      with_items:
+        - jmeter-plugins-manager
+      when: ansible_facts['distribution']=="Archlinux"
+
+    - name: Install JMeter MQTT plugin
+      ansible.builtin.get_url:
+        url: https://github.com/emqx/mqtt-jmeter/releases/download/v2.0.2/mqtt-xmeter-2.0.2-jar-with-dependencies.jar
+        dest: /opt/jmeter/lib/ext
+      become: true
+      when: ansible_facts['distribution']=="Archlinux"
+
+    - name: Directory permissions JMeter install (Archlinux) 
+      ansible.builtin.command: sudo chmod -R 777 /opt/jmeter
+      when: ansible_facts['distribution']=="Archlinux"
