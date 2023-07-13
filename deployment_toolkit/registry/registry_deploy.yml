@@ -1,0 +1,23 @@
+- name: Deploy local container registry
+  hosts: testers
+  vars:
+    reg_port: 5000
+    reg_ip: 127.0.0.1
+    container_images:
+      - fcarp10/fib-go
+  tasks:
+    - name: Remove old local container registry
+      ansible.builtin.shell: |
+        docker container stop registry && docker container rm -v registry
+
+    - name: Deploy local container registry
+      ansible.builtin.shell: |
+        docker run -d -p {{ reg_port }}:5000 --restart=always --name registry registry:2
+    
+    - name: Pull container images and push to local registry 
+      ansible.builtin.shell: |
+        docker pull {{ item }} 
+        docker tag {{ item }} localhost:{{ reg_port }}/{{ item }}
+        docker push localhost:{{ reg_port }}/{{ item }}
+      with_items:
+        - "{{ container_images }}"

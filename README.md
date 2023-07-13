@@ -94,6 +94,12 @@ ansible-playbook -i inventory/inventory_example.yml requirements/${REQ_FILE}.yml
 ```
 where `REQ_FILE` is either `machine`, `tester` or `hypervisor`.
 
+## Deploy local container registry
+
+Deploy local container registry on the tester node:
+```shell
+ansible-playbook -i inventory/inventory_example.yml deployment_toolkit/registry/registry_deploy.yml
+```
 
 ## Run hello-world test
 

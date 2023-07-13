@@ -1,14 +1,14 @@
 - name: Install JMeter plugins
   hosts: testers
   tasks:
-    - name: Install requirements (Ubuntu 22.04) # TO-DO
+    - name: Install JMeter plugins manager (Ubuntu 22.04) # TO-DO
       ansible.builtin.apt:
         pkg:
         state: present
       become: true
       when: ansible_facts['distribution']=="Ubuntu"
 
-    - name: Install requirements (Archlinux)
+    - name: Install JMeter plugins manager (Archlinux)
       ansible.builtin.command: paru -S --noconfirm --needed {{ item }}
       with_items:
         - jmeter-plugins-manager

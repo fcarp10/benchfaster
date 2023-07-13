@@ -1,7 +1,7 @@
 - name: Install JMeter
   hosts: testers
   tasks:
-    - name: Install requirements (Ubuntu 22.04)
+    - name: Install JMeter (Ubuntu 22.04)
       ansible.builtin.apt:
         pkg:
           - jmeter
@@ -9,7 +9,7 @@
       become: true
       when: ansible_facts['distribution']=="Ubuntu"
 
-    - name: Install requirements (Archlinux)
+    - name: Install JMeter (Archlinux)
       ansible.builtin.command: paru -S --noconfirm --needed {{ item }}
       with_items:
         - jmeter

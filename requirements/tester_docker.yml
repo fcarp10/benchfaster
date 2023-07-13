@@ -1,0 +1,11 @@
+- name: Install Docker
+  hosts: testers
+  tasks:
+    - name: Install Docker (Archlinux)
+      ansible.builtin.command: paru -S --noconfirm --needed {{ item }}
+      with_items:
+        - docker
+      when: ansible_facts['distribution']=="Archlinux"
+
+    - name: Enable/start docker service 
+      ansible.builtin.command: sudo systemctl enable --now docker.service
