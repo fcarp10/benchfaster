@@ -44,10 +44,8 @@ testers:
         openfaas_port: 31112
         openfaas_namespace: openfaas-fn
         openfaas_functions: hello-world
-      netem:
-        delay_intra: 50 
-        variance_intra: 2
-        loss_intra: 1
-        delay_tm: 50
-        variance_tm: 0
-        loss_tm: 0
+      registry:
+        reg_port: 5000
+        reg_ip: 192.168.1.247
+        container_images:
+          - fcarp10/fib-go

@@ -1,15 +1,16 @@
-- name: Add local container registry to K3s (TO-DO)
+- name: Set global vars
+  ansible.builtin.set_fact:
+    reg_port: "{{ hostvars[groups.testers[0]].registry.reg_port }}"
+    reg_ip: "{{ hostvars[groups.testers[0]].registry.reg_ip }}"
+    container_images: "{{ hostvars[groups.testers[0]].registry.container_images }}"
+
+- name: Add local container registry to K3s
   ansible.builtin.shell: |
-    echo "Reading config for repo $REPONAME at $REPOIP:$REPOPORT" >> {{ results_path.path }}/logs.txt
-    if [[ -n $(cat /etc/hosts | grep ${REPONAME}) ]]; then
-      sudo sed -i "/${REPONAME}$/d" /etc/hosts
-    fi
-    echo "Private container registry defined, applying settings..."
+    echo "Adding local container registry {{ reg_ip }}:{{ reg_port }} to K3s" >> {{ results_path.path }}/logs.txt
     cat << EOF | sudo tee /etc/rancher/k3s/registries.yaml > /dev/null
     mirrors:
-      "${REPONAME}:${REPOPORT}":
+      "{{ reg_ip }}:{{ reg_port }}":
         endpoint:
-          - "http://${REPONAME}:${REPOPORT}"
+          - "http://{{ reg_ip }}:{{ reg_port }}"
     EOF
-    echo "${REPOIP} ${REPONAME}" | sudo tee -a /etc/hosts > /dev/null
     sudo systemctl restart k3s*

@@ -1,14 +1,16 @@
 - name: Deploy local container registry
   hosts: testers
-  vars:
-    reg_port: 5000
-    reg_ip: 127.0.0.1
-    container_images:
-      - fcarp10/fib-go
   tasks:
+    - name: Set global vars
+      ansible.builtin.set_fact:
+        reg_port: "{{ hostvars[groups.testers[0]].registry.reg_port }}"
+        reg_ip: "{{ hostvars[groups.testers[0]].registry.reg_ip }}"
+        container_images: "{{ hostvars[groups.testers[0]].registry.container_images }}"
+
     - name: Remove old local container registry
       ansible.builtin.shell: |
         docker container stop registry && docker container rm -v registry
+      ignore_errors: True
 
     - name: Deploy local container registry
       ansible.builtin.shell: |
