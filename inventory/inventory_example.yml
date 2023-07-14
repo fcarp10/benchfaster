@@ -48,4 +48,9 @@ testers:
         reg_port: 5000
         reg_ip: 192.168.1.247
         container_images:
+          - michalkeit/faas-netes:0.13.2
+          - nats-streaming:0.22.0
+          - ghcr.io/openfaas/queue-worker:0.12.2
+          - prom/prometheus:v2.11.0
+          - ghcr.io/openfaas/basic-auth:0.21.1
           - fcarp10/fib-go

@@ -48,6 +48,7 @@ fi
 if [[ $REPO_NAME != "" && $REPO_PORT != "" ]]
 then
     REPOSITORY="${REPO_NAME}:${REPO_PORT}/"
+    echo "Using local registry [${REPOSITORY}]..."
 else
     REPOSITORY=""
 fi

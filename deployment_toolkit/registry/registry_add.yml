@@ -4,13 +4,16 @@
     reg_ip: "{{ hostvars[groups.testers[0]].registry.reg_ip }}"
     container_images: "{{ hostvars[groups.testers[0]].registry.container_images }}"
 
-- name: Add local container registry to K3s
+- name: Add local container registry to all machines
   ansible.builtin.shell: |
-    echo "Adding local container registry {{ reg_ip }}:{{ reg_port }} to K3s" >> {{ results_path.path }}/logs.txt
-    cat << EOF | sudo tee /etc/rancher/k3s/registries.yaml > /dev/null
+    echo "Adding local container registry {{ reg_ip }}:{{ reg_port }} to {{ hostvars[groups.machines[machine_item]].ansible_host }}" >> {{ results_path.path }}/logs.txt
+    ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "cat << EOF | sudo tee /etc/rancher/k3s/registries.yaml > /dev/null
     mirrors:
       "{{ reg_ip }}:{{ reg_port }}":
         endpoint:
           - "http://{{ reg_ip }}:{{ reg_port }}"
-    EOF
+    EOF"
     sudo systemctl restart k3s*
+  loop: "{{ range(0, groups.machines|length, 1)|list }}"
+  loop_control:
+    loop_var: machine_item
