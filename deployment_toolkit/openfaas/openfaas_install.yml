@@ -8,6 +8,6 @@
       {{ openfaas.openfaas_namespace }} \
       {{ openfaas.openfaas_functions }}" \
       false \
-      {{ registry.reg_ip }} \
+      {{ registry.reg_dname }} \
       {{ registry.reg_port }} \
       >> {{ results_path.path }}/logs.txt

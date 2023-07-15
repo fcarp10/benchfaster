@@ -7,5 +7,8 @@
         - docker
       when: ansible_facts['distribution']=="Archlinux"
 
-    - name: Enable/start docker service 
-      ansible.builtin.command: sudo systemctl enable --now docker.service
+    - name: Docker post-installation steps
+      ansible.builtin.shell: |
+        sudo usermod -aG docker $USER
+        newgrp docker
+        sudo systemctl enable --now docker.service
