@@ -41,7 +41,7 @@
       echo "Waiting for all nodes to join the cluster..." >> {{ results_path.path }}/logs.txt
       ACTIVENODES=1
       until [ $(($ACTIVENODES-1)) -eq {{ num_workers|int }} ]; do
-          echo -n "[$(($ACTIVENODES-1))] out of [{{ num_workers|int }}]\n" >> {{ results_path.path }}/logs.txt
+          echo "[$(($ACTIVENODES-1))] out of [{{ num_workers|int }}]" >> {{ results_path.path }}/logs.txt
           ACTIVENODES=$(ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} "sudo kubectl get nodes -o json|jq -r '.items[]|select(.status.conditions[].type==\"Ready\")|select(.spec.taints|not).metadata.name' | wc -l")
           sleep 1
       done
