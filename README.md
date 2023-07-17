@@ -16,7 +16,7 @@ BenchFaster consist on four type of nodes:
   - Ansible
   
 - Tester node: A remote host from where BenchFaster deployment is launched and the
-  performance tests are run. Components:
+  benchmarks are run. Components:
 
   - BenchFaster
   - Load testing tool: JMeter, k6
@@ -64,18 +64,30 @@ Common parameters:
 - `ansible_host`: Name of the host to connect from the ansible control node
 - `ansible_user`: User name to connect
 - `interface`: Network interface
+- `arch`: amd64 or arm64
 
 Machines:
-- `arch`: amd64 or arm64
 - `headnode`: true, when the machine is the head node
 
 Testers:
-- `address_benchmark`: Name of the host where to run the performance tests
-  against
-- `num_workers`: Number of expected workers in the cluster 
+- `address_benchmark`: Name of the host where to run the benchmarks against
+
+## Playbook
+
+Playbooks define the following variables:
+
+- `num_workers`: Number of workers in the cluster 
 - `vagrant.vm_cpu`: Number of CPUs units per VM (required only in hypervisor mode)
 - `vagrant.vm_mem`: Amount of RAM per VM (required only in hypervisor mode)
 - `vagrant.vm_image`: Name of the Vagrant box (required only in hypervisor mode)
+- `nebula.nebula_version`: Nebula version
+- `nebula.nebula_address`: Nebula address
+- `nebula.nebula_port`: Nebula port
+- `k3s.k3s_version`: K3s version
+- `k3s.k3s_port`: K3s port
+- `openfaas.openfaas_version`: OpenFaaS version
+- `openfaas.openfaas_port`: OpenFaaS port 
+- `openfaas.openfaas_namespace`: OpenFaaS namespace for functions
 - `openfaas.openfaas_functions`: List of OpenFaaS functions to deploy
 - `netem.delay_intra`: Intra node delay in ms
 - `netem.variance_intra`: Intra node delay variance in ms
@@ -98,7 +110,7 @@ where `REQ_FILE` is either `machine`, `tester` or `hypervisor`.
 
 Deploy local container registry on the tester node:
 ```shell
-ansible-playbook -i inventory/inventory_example.yml deployment_toolkit/registry/registry_deploy.yml
+ansible-playbook -i inventory/inventory_example.yml playbook_registry.yml
 ```
 
 ## Run hello-world test

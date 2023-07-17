@@ -1,13 +1,13 @@
 - name: Set toolkit directory
   ansible.builtin.set_fact:
-    toolkit_dir: "{{ playbook_dir }}/deployment_toolkit"
-    tests_dir: "{{ playbook_dir }}/performance_tests"
+    toolkit_dir: "{{ playbook_dir }}/deployment"
+    tests_dir: "{{ playbook_dir }}/benchmark"
 
 - name: Generate Nebula certificates
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
 
 - name: Initialize BenchFaster
-  ansible.builtin.include_tasks: "deployment_toolkit/init.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/init.yml"
 
 - name: Deploy Nebula network
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_network.yml"
@@ -37,7 +37,7 @@
   when: hvm is defined
 
 - name: Run scalability test with JMeter
-  ansible.builtin.include_tasks: "{{ tests_dir }}/scalability/scalability.yml"
+  ansible.builtin.include_tasks: "{{ tests_dir }}/openfaas/scalability/scalability.yml"
 
 - name: Delete QoS from all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"

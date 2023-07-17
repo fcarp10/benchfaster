@@ -103,7 +103,7 @@ sudo -E helm upgrade openfaas --install openfaas/openfaas --namespace openfaas \
     --set faasnetes.writeTimeout=$TIMEOUT \
     --set faasnetes.readTimeout=$TIMEOUT \
     --set queueWorker.ackWait=$TIMEOUT \
-    --set faasnetes.image=${REPOSITORY}michalkeit/faas-netes:0.13.2 \
+    --set faasnetes.image=${REPOSITORY}ghcr.io/openfaas/faas-netes:0.13.2 \
     --set nats.image=${REPOSITORY}nats-streaming:0.22.0 \
     --set queueWorker.image=${REPOSITORY}ghcr.io/openfaas/queue-worker:0.12.2 \
     --set prometheus.image=${REPOSITORY}prom/prometheus:v2.11.0 \

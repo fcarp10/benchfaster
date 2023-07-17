@@ -2,7 +2,7 @@
   ansible.builtin.shell: |
     echo "Installing Nebula lighthouse..." >> {{ results_path.path }}/logs.txt
     ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} \
-      "/home/{{ headnode.ansible_user }}/benchfaster/deployment_toolkit/nebula/nebula_install.sh \
+      "/home/{{ headnode.ansible_user }}/benchfaster/deployment/nebula/nebula_install.sh \
       {{ nebula.nebula_version }} \
       /home/{{ headnode.ansible_user }} \
       {{ headnode.arch }} \
@@ -29,7 +29,7 @@
   ansible.builtin.shell: |
     echo "Installing Nebula client..." >> {{ results_path.path }}/logs.txt
     ssh -n {{ hostvars[groups.machines[worker_item]].ansible_user }}@{{ hostvars[groups.machines[worker_item]].ansible_host }} \
-      "/home/{{ hostvars[groups.machines[worker_item]].ansible_user }}/benchfaster/deployment_toolkit/nebula/nebula_install.sh \
+      "/home/{{ hostvars[groups.machines[worker_item]].ansible_user }}/benchfaster/deployment/nebula/nebula_install.sh \
       {{ nebula.nebula_version }} \
       /home/{{ hostvars[groups.machines[worker_item]].ansible_user }} \
       {{ hostvars[groups.machines[worker_item]].arch }} \

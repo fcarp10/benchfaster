@@ -1,6 +1,6 @@
 - name: Run helloworld test with JMeter
   ansible.builtin.shell: |
-    jmeter -n -t {{ tests_dir }}/helloworld/helloworld.jmx \ 
+    jmeter -n -t {{ tests_dir }}/openfaas/helloworld/helloworld.jmx \ 
       -Jrequest.ip={{ address_benchmark }} \
       -Jrequest.port={{ openfaas.openfaas_port }} \
       -Jtest.iterations=100 \

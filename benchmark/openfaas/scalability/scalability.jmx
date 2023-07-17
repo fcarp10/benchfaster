@@ -21,7 +21,7 @@
         <stringProp name="ThreadGroup.num_threads">${__P(test.threads)}</stringProp>
         <stringProp name="ThreadGroup.ramp_time">0</stringProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
-        <stringProp name="ThreadGroup.duration">180</stringProp>
+        <stringProp name="ThreadGroup.duration">120</stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">false</boolProp>
       </ThreadGroup>
@@ -51,11 +51,6 @@
           <stringProp name="HTTPSampler.connect_timeout">2000</stringProp>
           <stringProp name="HTTPSampler.response_timeout">5000</stringProp>
         </HTTPSamplerProxy>
-        <hashTree/>
-        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
-          <stringProp name="ConstantTimer.delay">250</stringProp>
-        </ConstantTimer>
-        <hashTree/>
       </hashTree>
     </hashTree>
   </hashTree>

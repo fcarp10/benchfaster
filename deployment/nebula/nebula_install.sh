@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NEBULA_VERSION=$1
-NEBULA_CONFIG=$2/benchfaster/deployment_toolkit/nebula/config
+NEBULA_CONFIG=$2/benchfaster/deployment/nebula/config
 ARCH=$3
 NEBULA_WORKER=$4
 NEBULA_LIGHTHOUSE_IF=$5

@@ -1,6 +1,6 @@
 - name: Run helloworld test with K6
   ansible.builtin.shell: |
-    k6 run {{ tests_dir }}/helloworld/helloworld.js \
+    k6 run {{ tests_dir }}/openfaas/helloworld/helloworld.js \
       -e host={{ address_benchmark }} \
       -e port={{ openfaas.openfaas_port }} \
       --iterations 100 \

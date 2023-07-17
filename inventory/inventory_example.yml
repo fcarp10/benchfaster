@@ -25,33 +25,6 @@ testers:
       ansible_host: localhost
       ansible_user: vegeta
       interface: enp4s0
-      address_benchmark: 192.168.1.247
       arch: amd64
-      num_workers: 2
-      vagrant:
-        vm_cpu: 2
-        vm_mem: 4096
-        vm_image: "generic/ubuntu2004"
-      nebula: 
-        nebula_version: 1.5.2
-        nebula_address: lighthouse
-        nebula_port: 4242
-      k3s: 
-        k3s_version: v1.23.6+k3s1
-        k3s_port: 6443
-      openfaas:
-        openfaas_version: 10.0.8
-        openfaas_port: 31112
-        openfaas_namespace: openfaas-fn
-        openfaas_functions: hello-world
-      registry:
-        reg_port: 5000
-        reg_ip: 192.168.1.247
-        reg_dname: local-registry
-        container_images:
-          - michalkeit/faas-netes:0.13.2
-          - nats-streaming:0.22.0
-          - ghcr.io/openfaas/queue-worker:0.12.2
-          - prom/prometheus:v2.11.0
-          - ghcr.io/openfaas/basic-auth:0.21.1
-          - fcarp10/fib-go
+      address_benchmark: 192.168.1.247
+        
