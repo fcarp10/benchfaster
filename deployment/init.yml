@@ -15,6 +15,7 @@
 
 - name: Copy BenchFaster to machines
   ansible.builtin.shell: |
+    ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "rm -rf benchfaster"
     echo "Copying BenchFaster to {{ hostvars[groups.machines[machine_item]] }} ..." >> {{ results_path.path }}/logs.txt
     rsync -e 'ssh -ax' -av --exclude _results/ --exclude _plots/ {{ playbook_dir }} {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }}:/home/{{ hostvars[groups.machines[machine_item]].ansible_user }}
   loop: "{{ range(0, groups.machines|length, 1)|list }}"

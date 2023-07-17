@@ -60,7 +60,7 @@ deploy() {
 	echo "Found $ACTIVENODES of $(($NUM_WORKERS+1)) expected"
 	vagrant ssh -c "sudo kubectl get nodes"
 	echo "All nodes joined, installing openfaas..."
-	vagrant ssh -c "/vagrant/benchfaster/deployment_toolkit/openfaas/openfaas_install.sh vm $OPENFAAS_PORT $OPENFAAS_VERSION $OPENFAAS_NAMESPACE $OPENFAAS_FUNCTIONS $DEBUG $REPO_NAME $REPO_PORT"
+	vagrant ssh -c "/vagrant/benchfaster/deployment/openfaas/openfaas_install.sh vm $OPENFAAS_PORT $OPENFAAS_VERSION $OPENFAAS_NAMESPACE $OPENFAAS_FUNCTIONS $DEBUG $REPO_NAME $REPO_PORT"
 	if [ $? -ne 0 ]; then echo "There was an error while installing a node. Aborting..." \
 		&& exit 1; fi
 }

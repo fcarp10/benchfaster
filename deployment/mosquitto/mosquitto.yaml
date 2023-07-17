@@ -1,0 +1,20 @@
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: mosquitto
+   namespace: mosquitto
+ spec:
+   selector:
+      matchLabels:
+         run: mosquitto
+   replicas: 1
+   template:
+      metadata:
+         labels:
+            run: mosquitto
+      spec:
+         containers:
+         - name: mosquitto-broker
+           image: eclipse-mosquitto:1.6.15
+           ports:
+           - containerPort: 1883

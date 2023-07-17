@@ -38,7 +38,7 @@ REPO_PORT=$8
 
 if [ $DEVTYPE = "vm" ]
 then
-    TOOLKITPATH="/vagrant/benchfaster/deployment_toolkit"
+    TOOLKITPATH="/vagrant/benchfaster/deployment"
     cd $TOOLKITPATH
 else
     TOOLKITPATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../
@@ -60,12 +60,10 @@ while [ $? -ne 0 ]; do curl -sL https://cli.openfaas.com | sudo -E sh; done
 echo "Deploying openfaas..."
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> /home/`whoami`/.bashrc
-WORKERNUMBER=0
 for worker in $(sudo -E kubectl get nodes | grep -v control-plane | grep -v NAME \
     | sed 's/\s.*$//')
 do
     sudo -E kubectl label node $worker node-role.kubernetes.io/worker=worker
-    WORKERNUMBER=$((WORKERNUMBER+1))
 done
 curl -sSLf https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 \
     | bash

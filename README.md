@@ -118,7 +118,7 @@ ansible-playbook -i inventory/inventory_example.yml playbook_registry.yml
 Run a hello-world example with:
 
 ```shell
-ansible-playbook -i inventory/inventory_example.yml playbook_example.yml
+ansible-playbook -i inventory/inventory_example.yml playbook_openfaas_helloworld.yml
 ```
 
 Optional variables (`-e "key=value"`):

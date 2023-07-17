@@ -17,14 +17,14 @@ vagrant_deploy(){
 	sed -i "s@REPO_NAME =.*@REPO_NAME = \"${REPO_NAME}\"@g" $TOOLKITPATH/vagrant/environment.transfer
 	sed -i "s@REPO_PORT =.*@REPO_PORT = \"${REPO_PORT}\"@g" $TOOLKITPATH/vagrant/environment.transfer
 	sed -i "s@REPO_IP =.*@REPO_IP = \"${REPO_IP}\"@g" $TOOLKITPATH/vagrant/environment.transfer
-	scp $TOOLKITPATH/vagrant/environment.transfer $USER@$ADDRESS:${WORKPATH}benchfaster/deployment_toolkit/vagrant/environment.rb > /dev/null
+	scp $TOOLKITPATH/vagrant/environment.transfer $USER@$ADDRESS:${WORKPATH}benchfaster/deployment/vagrant/environment.rb > /dev/null
 	rm $TOOLKITPATH/vagrant/environment.transfer
 
 	echo "Cleaning up old VMs..."
-	ssh -n ${USER}@${ADDRESS} "chmod +x ${WORKPATH}benchfaster/deployment_toolkit/vagrant/vagrant_remote.sh"
-	ssh -n ${USER}@${ADDRESS} "bash ${WORKPATH}benchfaster/deployment_toolkit/vagrant/vagrant_remote.sh clean"
+	ssh -n ${USER}@${ADDRESS} "chmod +x ${WORKPATH}benchfaster/deployment/vagrant/vagrant_remote.sh"
+	ssh -n ${USER}@${ADDRESS} "bash ${WORKPATH}benchfaster/deployment/vagrant/vagrant_remote.sh clean"
 
 	echo "Deploying VMs..."
-	ssh -n $USER@$ADDRESS "chmod +x ${WORKPATH}benchfaster/deployment_toolkit/vagrant/vagrant_remote.sh> /dev/null"
-	ssh -n $USER@$ADDRESS "bash ${WORKPATH}benchfaster/deployment_toolkit/vagrant/vagrant_remote.sh deploy '$OPENFAAS_PORT $OPENFAAS_VERSION $OPENFAAS_NAMESPACE $OPENFAAS_FUNCTIONS $DEBUG $REPO_NAME $REPO_PORT'"
+	ssh -n $USER@$ADDRESS "chmod +x ${WORKPATH}benchfaster/deployment/vagrant/vagrant_remote.sh> /dev/null"
+	ssh -n $USER@$ADDRESS "bash ${WORKPATH}benchfaster/deployment/vagrant/vagrant_remote.sh deploy '$OPENFAAS_PORT $OPENFAAS_VERSION $OPENFAAS_NAMESPACE $OPENFAAS_FUNCTIONS $DEBUG $REPO_NAME $REPO_PORT'"
 }
