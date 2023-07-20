@@ -7,17 +7,17 @@
     loop_var: headnode_item
   when: hostvars[groups.machines[headnode_item]].headnode is defined
 
-- name: Create results directory
-  ansible.builtin.file:
-    path: "{{ playbook_dir }}/_results/{{ foldername }}"
-    state: directory
-  register: results_path
-
 - name: Copy BenchFaster to machines
   ansible.builtin.shell: |
-    ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "rm -rf benchfaster"
-    echo "Copying BenchFaster to {{ hostvars[groups.machines[machine_item]] }} ..." >> {{ results_path.path }}/logs.txt
+    ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "find ./benchfaster -mindepth 1 ! -regex '^./benchfaster/_results\(/.*\)?' -delete"
     rsync -e 'ssh -ax' -av --exclude _results/ --exclude _plots/ {{ playbook_dir }} {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }}:/home/{{ hostvars[groups.machines[machine_item]].ansible_user }}
   loop: "{{ range(0, groups.machines|length, 1)|list }}"
   loop_control:
     loop_var: machine_item
+  delegate_to: 127.0.0.1
+
+- name: Create results directory
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/benchfaster/_results/{{ foldername }}"
+    state: directory
+  register: results_path

@@ -1,14 +1,15 @@
 - name: Deploy K3s on headnode
   ansible.builtin.shell: |
-    bash {{ toolkit_dir }}/main.sh \
+    ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} \
+      "bash /home/{{ headnode.ansible_user }}/benchfaster/deployment/main.sh \
       --opt k3s \
       --address {{ headnode.ansible_host }} \
-      --user {{ headnode.ansible_user }} \ 
-      --workpath /home/{{ headnode.ansible_user }}/ \ 
+      --user {{ headnode.ansible_user }} \
+      --workpath /home/{{ headnode.ansible_user }}/ \
       --headnode {{ headnode.headnode }} \
       --interface {{ headnode.interface }} \
       --num-workers {{ num_workers }} \
-      --k3s-version {{ k3s.k3s_version }} \ 
+      --k3s-version {{ k3s.k3s_version }}" \
       >> {{ results_path.path }}/logs.txt
   args:
     executable: /bin/bash
@@ -19,15 +20,16 @@
 
 - name: Deploy K3s on worker nodes
   ansible.builtin.shell: |
-    bash {{ toolkit_dir }}/main.sh \
+    ssh -n {{ hostvars[groups.machines[worker_item]].ansible_user }}@{{ hostvars[groups.machines[worker_item]].ansible_host }} \
+      "bash /home/{{ headnode.ansible_user }}/benchfaster/deployment/main.sh \
       --opt k3s \
       --address {{ hostvars[groups.machines[worker_item]].ansible_host }} \
-      --user {{ hostvars[groups.machines[worker_item]].ansible_user }} \ 
-      --workpath /home/{{ hostvars[groups.machines[worker_item]].ansible_user }}/ \ 
+      --user {{ hostvars[groups.machines[worker_item]].ansible_user }} \
+      --workpath /home/{{ hostvars[groups.machines[worker_item]].ansible_user }}/ \
       --interface {{ hostvars[groups.machines[worker_item]].interface }} \
-      --k3s-port {{ k3s.k3s_port }} \ 
-      --k3s-version {{ k3s.k3s_version }} \ 
-      --k3s-token {{ k3s_token.stdout }} \
+      --k3s-port {{ k3s.k3s_port }} \
+      --k3s-version {{ k3s.k3s_version }} \
+      --k3s-token {{ k3s_token.stdout }}" \
       >> {{ results_path.path }}/logs.txt
   args:
     executable: /bin/bash
@@ -38,11 +40,11 @@
 
 - name: Wait for K3s workers to join
   ansible.builtin.shell: |
-      echo "Waiting for all nodes to join the cluster..." >> {{ results_path.path }}/logs.txt
-      ACTIVENODES=1
-      until [ $(($ACTIVENODES-1)) -eq {{ num_workers|int }} ]; do
-          echo "[$(($ACTIVENODES-1))] out of [{{ num_workers|int }}]" >> {{ results_path.path }}/logs.txt
-          ACTIVENODES=$(ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} "sudo kubectl get nodes -o json|jq -r '.items[]|select(.status.conditions[].type==\"Ready\")|select(.spec.taints|not).metadata.name' | wc -l")
-          sleep 1
-      done
-      echo " all nodes joined!" >> {{ results_path.path }}/logs.txt
+    echo "Waiting for all nodes to join the cluster..." >> {{ results_path.path }}/logs.txt
+    ACTIVENODES=1
+    until [ $(($ACTIVENODES-1)) -eq {{ num_workers|int }} ]; do
+        echo "[$(($ACTIVENODES-1))] out of [{{ num_workers|int }}]" >> {{ results_path.path }}/logs.txt
+        ACTIVENODES=$(ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} "sudo kubectl get nodes -o json|jq -r '.items[]|select(.status.conditions[].type==\"Ready\")|select(.spec.taints|not).metadata.name' | wc -l")
+        sleep 1
+    done
+    echo " all nodes joined!" >> {{ results_path.path }}/logs.txt

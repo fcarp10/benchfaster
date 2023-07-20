@@ -2,11 +2,13 @@
   ansible.builtin.file:
     path: "{{ toolkit_dir }}/nebula/config/cert"
     state: absent
+  delegate_to: 127.0.0.1
 
 - name: Create certificates directory
   ansible.builtin.file:
     path: "{{ toolkit_dir }}/nebula/config/cert"
     state: directory
+  delegate_to: 127.0.0.1
 
 - name: Generate nebula certificates - lighthouse
   ansible.builtin.shell: |
@@ -14,6 +16,7 @@
       nebula-cert sign -name "lighthouse" -ip "192.168.50.99/24"
   args:
     chdir: "{{ toolkit_dir }}/nebula/config/cert/"
+  delegate_to: 127.0.0.1
 
 #TODO: adapt loop control to new inventory
 - name: Generate nebula certificates - workers
@@ -24,3 +27,4 @@
     loop_var: worker_item
   args:
     chdir: "{{ toolkit_dir }}/nebula/config/cert/"
+  delegate_to: 127.0.0.1

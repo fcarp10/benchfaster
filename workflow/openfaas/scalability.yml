@@ -9,6 +9,10 @@
 - name: Initialize BenchFaster
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/init.yml"
 
+- name: Delete QoS from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"
+  when: hvm is not defined
+
 - name: Deploy Nebula network
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_network.yml"
   when: hvm is not defined
@@ -24,10 +28,6 @@
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"
   when: hvm is not defined
 
-- name: Delete QoS from all nodes
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"
-  when: hvm is not defined
-
 - name: Apply QoS to all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos.yml"
   when: hvm is not defined
@@ -38,6 +38,10 @@
 
 - name: Run scalability test with JMeter
   ansible.builtin.include_tasks: "{{ tests_dir }}/openfaas/scalability/scalability.yml"
+
+- name: Copy results from tester to control node
+  ansible.builtin.command: rsync -a "{{ ansible_user }}"@"{{ ansible_host }}":/home/"{{ ansible_user }}"/benchfaster/_results "{{ playbook_dir }}"/
+  delegate_to: 127.0.0.1
 
 - name: Delete QoS from all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"

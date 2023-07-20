@@ -1,8 +1,0 @@
-- name: Run MQTT helloworld test with JMeter
-  ansible.builtin.shell: |
-    jmeter -n -t {{ tests_dir }}/mqtt/helloworld/helloworld.jmx \ 
-      -Jrequest.ip={{ address_benchmark }} \
-      -Jrequest.port={{ mosquitto.mosquitto_port }} \
-      -Jtest.threads={{ pb_item.1 }} \
-      -Jtest.duration=10 \
-      -l {{ results_path.path }}/helloworld-mosquitto_W-{{ num_workers }}_Q-{{ pb_item.0.name }}_T-{{ pb_item.1 }}.csv

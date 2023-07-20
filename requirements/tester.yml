@@ -1,7 +1,5 @@
 - name: Install JMeter
   ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_jmeter.yml"
-- name: Install JMeter plugins
-  ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_jmeter_plugins.yml"
 - name: Install K6
   ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_k6.yml"
 - name: Install Nebula
