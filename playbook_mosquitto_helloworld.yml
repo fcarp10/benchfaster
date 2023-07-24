@@ -43,6 +43,10 @@
       
   tasks:
 
+    - name: Set results directory
+      ansible.builtin.set_fact:
+        foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
+
     - name: Run Mosquitto helloworld test
       ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/mosquitto/helloworld/helloworld_mqtt-stresser.yml"
       vars:

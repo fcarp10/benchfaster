@@ -1,5 +1,8 @@
 - name: Initialize BenchFaster
   ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/init.yml"
+
+- name: Add local container registry
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/registry/registry_add.yml"
   
 - name: Install OpenFaas
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"

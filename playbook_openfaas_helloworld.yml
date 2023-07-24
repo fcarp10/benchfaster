@@ -47,6 +47,10 @@
         loss_tm: 0.02
       
   tasks:
+
+    - name: Set results directory
+      ansible.builtin.set_fact:
+        foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
     
     - name: Run OpenFaas helloworld test
       ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/openfaas/helloworld/helloworld_jmeter.yml"
