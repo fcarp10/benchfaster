@@ -1,3 +1,11 @@
+- name: Set toolkit directory
+  ansible.builtin.set_fact:
+    toolkit_dir: "{{ playbook_dir }}/deployment"
+    tests_dir: "{{ playbook_dir }}/benchmark"
+
+- name: Generate Nebula certificates
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+
 - name: Register headnode
   ansible.builtin.set_fact:
     headnode: "{{ hostvars[groups.machines[i]] }}"
@@ -16,8 +24,28 @@
     loop_var: machine_item
   delegate_to: 127.0.0.1
 
+- name: Set results directory
+  ansible.builtin.set_fact:
+    foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
+
 - name: Create results directory
   ansible.builtin.file:
     path: "/home/{{ ansible_user }}/benchfaster/_results/{{ foldername }}"
     state: directory
   register: results_path
+
+- name: Delete QoS from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"
+  when: hvm is not defined
+
+- name: Deploy Nebula network
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_network.yml"
+  when: hvm is not defined
+
+- name: Deploy K3s cluster
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/k3s/k3s_cluster.yml"
+  when: hvm is not defined
+
+- name: Apply QoS to all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos.yml"
+  when: hvm is not defined

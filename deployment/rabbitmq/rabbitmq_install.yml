@@ -1,0 +1,3 @@
+- name: Install RabbitMQ
+  ansible.builtin.shell: |
+    ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} "benchfaster/deployment/rabbitmq/rabbitmq_install.sh" >> {{ results_path.path }}/logs.txt

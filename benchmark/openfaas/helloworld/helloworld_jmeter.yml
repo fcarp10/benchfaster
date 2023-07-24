@@ -1,7 +1,20 @@
+- name: Initialize BenchFaster
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/init.yml"
+  
+- name: Install OpenFaas
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"
+
 - name: Run helloworld test with JMeter
   ansible.builtin.shell: |
-    jmeter -n -t {{ tests_dir }}/openfaas/helloworld/helloworld.jmx \ 
+    jmeter -n -t {{ tests_dir }}/openfaas/helloworld/helloworld.jmx \
       -Jrequest.ip={{ address_benchmark }} \
       -Jrequest.port={{ openfaas.openfaas_port }} \
       -Jtest.iterations=100 \
-      -l {{ results_path.path }}/helloworld-jmeter_openfaas_{{ filesuffix }}_{{ item.name }}.csv
+      -l {{ results_path.path }}/helloworld-jmeter_openfaas_W-{{ num_workers }}_Q-{{ item.name }}.csv
+
+- name: Copy results to control node
+  ansible.builtin.command: rsync -a "{{ ansible_user }}"@"{{ ansible_host }}":/home/"{{ ansible_user }}"/benchfaster/_results "{{ playbook_dir }}"/
+  delegate_to: 127.0.0.1
+
+- name: Delete BenchFaster
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/delete.yml"

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: enabledplugins
+  namespace: rabbitmq
+data:
+  enabled_plugins: |
+    [rabbitmq_prometheus,rabbitmq_mqtt].
+  rabbitmq.conf: |
+    ## DANGER ZONE
+    ## This enables remote access for the default user with well known credentials.
+    ## Consider deleting the default user and creating a separate user with a set of generated
+    ## credentials instead.
+    ## Learn more at https://www.rabbitmq.com/access-control.html#loopback-users
+    loopback_users.guest = none

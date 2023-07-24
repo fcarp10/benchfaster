@@ -1,4 +1,4 @@
-- name: MQTT helloworld playbook
+- name: Mosquitto helloworld playbook
   hosts: testers
   vars:
     num_workers: 1
@@ -42,12 +42,9 @@
         loss_tm: 0.02
       
   tasks:
-    - name: Set global vars
-      ansible.builtin.set_fact:
-        foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
 
-    - name: Run deployment workflow
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/workflow/mqtt/helloworld.yml"
+    - name: Run Mosquitto helloworld test
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/mosquitto/helloworld/helloworld_mqtt-stresser.yml"
       vars:
         - item: "{{ pb_item.0 }}"
       loop: "{{ netem |  product(num_threads)  | list }}"

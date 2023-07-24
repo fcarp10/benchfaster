@@ -1,7 +1,7 @@
 - name: OpenFaaS helloworld playbook
   hosts: testers
   vars:
-    num_workers: 2
+    num_workers: 4
     vagrant:
       vm_cpu: 2
       vm_mem: 4096
@@ -47,13 +47,11 @@
         loss_tm: 0.02
       
   tasks:
-    - name: Set global vars
-      ansible.builtin.set_fact:
-        foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
-        filesuffix: "2rpi"
-    - name: Run deployment workflow
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/workflow/openfaas/helloworld.yml"
+    
+    - name: Run OpenFaas helloworld test
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/openfaas/helloworld/helloworld_jmeter.yml"
       with_items:
         - "{{ netem }}"
+
 
 

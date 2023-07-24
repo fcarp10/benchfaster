@@ -1,7 +1,7 @@
 #!/bin/bash
 
 k3s_install(){
-	echo "Cleaning up k3s from $ADDRESS..."
+	echo "Cleaning up k3s from $USER@$ADDRESS..."
 	ssh -n $USER@$ADDRESS "/usr/local/bin/k3s-uninstall.sh > /dev/null"
 	ssh -n $USER@$ADDRESS "/usr/local/bin/k3s-agent-uninstall.sh > /dev/null"
     if [ $HEADNODE ]; then
