@@ -84,15 +84,13 @@ fi
 echo "Adding OpenFaaS..."
 sudo -E helm repo add openfaas https://openfaas.github.io/faas-netes/
 sudo -E helm repo update
-sleep 2
-sudo -E kubectl -n openfaas create secret generic basic-auth \
-    --from-literal=basic-auth-user=admin \
-    --from-literal=basic-auth-password=password
 sleep 5
 TIMEOUT=2m
 
-sudo -E helm upgrade openfaas --install openfaas/openfaas --namespace openfaas \
-    --set functionNamespace=$OPENFAAS_NAMESPACE --set basic_auth=true \
+sudo -E helm upgrade openfaas --install openfaas/openfaas \
+    --namespace openfaas \
+    --set functionNamespace=$OPENFAAS_NAMESPACE \
+    --set basic_auth=false \
     --set gateway.directFunctions=false \
     --set gateway.upstreamTimeout=$TIMEOUT \
     --set gateway.writeTimeout=$TIMEOUT \
@@ -101,11 +99,12 @@ sudo -E helm upgrade openfaas --install openfaas/openfaas --namespace openfaas \
     --set faasnetes.writeTimeout=$TIMEOUT \
     --set faasnetes.readTimeout=$TIMEOUT \
     --set queueWorker.ackWait=$TIMEOUT \
-    --set faasnetes.image=${REPOSITORY}ghcr.io/openfaas/faas-netes:0.13.2 \
-    --set nats.image=${REPOSITORY}nats-streaming:0.22.0 \
-    --set queueWorker.image=${REPOSITORY}ghcr.io/openfaas/queue-worker:0.12.2 \
-    --set prometheus.image=${REPOSITORY}prom/prometheus:v2.11.0 \
-    --set basicAuthPlugin.image=${REPOSITORY}ghcr.io/openfaas/basic-auth:0.21.1 \
+    --set faasnetes.image=${REPOSITORY}michalkeit/faas-netes:0.13.2 \
+    --set gateway.image=${REPOSITORY}ghcr.io/openfaas/gateway:0.27.0 \
+    --set queueWorker.image=${REPOSITORY}ghcr.io/openfaas/queue-worker:0.14.0 \
+    --set prometheus.image=${REPOSITORY}prom/prometheus:v2.46.0 \
+    --set alertmanager.image=${REPOSITORY}prom/alertmanager:v0.25.0 \
+    --set nats.image=${REPOSITORY}nats-streaming:0.25.5 \
     --version $OPENFAAS_VERSION
 if [ $? -ne 0 ]; then echo "There was an error while deploying OpenFaaS. Aborting..." \
     && exit 1; fi
@@ -121,7 +120,6 @@ echo "Testing OpenFaaS..."
 sudo -E kubectl -n openfaas get deployments -l "release=openfaas, app=openfaas"
 export OPENFAAS_URL=http://127.0.0.1:$OPENFAAS_PORT
 echo "export OPENFAAS_URL=http://127.0.0.1:$OPENFAAS_PORT" >> /home/`whoami`/.bashrc
-sudo -E faas-cli login --username admin --password password
 
 # Configuring metrics
 sudo -E helm repo add prometheus-community https://prometheus-community.github.io/helm-charts

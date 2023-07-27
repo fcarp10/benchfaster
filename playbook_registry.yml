@@ -6,12 +6,12 @@
     reg_port: 5000
     reg_dname: local-registry
     container_images:
-      - ghcr.io/openfaas/faas-netes:0.13.2
-      - nats-streaming:0.22.0
-      - ghcr.io/openfaas/queue-worker:0.12.2
-      - prom/prometheus:v2.11.0
-      - directxman12/k8s-prometheus-adapter:v0.8.4
-      - ghcr.io/openfaas/basic-auth:0.21.1
+      - michalkeit/faas-netes:0.13.2
+      - ghcr.io/openfaas/gateway:0.27.0
+      - ghcr.io/openfaas/queue-worker:0.14.0
+      - prom/prometheus:v2.46.0
+      - prom/alertmanager:v0.25.0
+      - nats-streaming:0.25.5
       - fcarp10/hello-world
       - fcarp10/fib-go
   tasks:
