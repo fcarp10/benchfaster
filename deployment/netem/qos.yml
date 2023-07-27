@@ -1,25 +1,17 @@
-- name: Apply QoS set "{{ item.name }}" (intra)
-  ansible.builtin.shell: |
-    echo "Reading QoS (intra) [interface: {{ hostvars[groups.machines[machine_item]].interface }}, delay: {{ item.delay_intra }}ms, variance: {{ item.variance_intra }}ms, loss: {{ item.loss_intra }}%]..."  >> {{ results_path.path }}/logs.txt
-    if [[ {{ item.delay_intra }} != "null" && {{ item.delay_intra }} != 0 && {{ item.variance_intra }} != "null" && {{ item.variance_intra }} != 0 && {{ item.loss_intra }} != "null" && {{ item.loss_intra }} != 0 ]]; then
-      echo "Applying QoS [interface: {{ hostvars[groups.machines[machine_item]].interface }}, delay: {{ item.delay_intra }}ms, variance: {{ item.variance_intra }}ms, loss: {{ item.loss_intra }}%]..." >> {{ results_path.path }}/logs.txt
-      ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc add dev {{ hostvars[groups.machines[machine_item]].interface }} root netem delay {{ item.delay_intra }}ms {{ item.variance_intra }}ms distribution normal loss {{ item.loss_intra }}%"
-    else
-      echo "No QoS to apply to machine" >> {{ results_path.path }}/logs.txt
-    fi
+- ansible.builtin.set_fact:
+    qos: "{{ item.intra }}"
+
+- name: Apply QoS set "{{ item.name }}" (machines)
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_add.yml"
   loop: "{{ range(0, groups.machines|length, 1)|list }}"
   loop_control:
-    loop_var: machine_item
+    loop_var: hitem
+
+- ansible.builtin.set_fact:
+    qos: "{{ item.tm }}"
 
 - name: Apply QoS set "{{ item.name }}" (testers)
-  ansible.builtin.shell: |
-    echo "Reading QoS (testers) [interface: {{ hostvars[groups.testers[tester_item]].interface }}, delay: {{ item.delay_tm }}ms, variance: {{ item.variance_tm }}ms, loss: {{ item.loss_tm }}%]..." >> {{ results_path.path }}/logs.txt
-    if [[ {{ item.delay_tm }} != "null" && {{ item.delay_tm }} != 0 && {{ item.variance_tm }} != "null" && {{ item.variance_tm }} != 0 && {{ item.loss_tm }} != "null" && {{ item.loss_tm }} != 0 ]]; then
-      echo "Applying QoS [interface: {{ hostvars[groups.testers[tester_item]].interface }}, delay: {{ item.delay_tm }}ms, variance: {{ item.variance_tm }}ms, loss: {{ item.loss_tm }}%]..." >> {{ results_path.path }}/logs.txt
-      ssh -n {{ hostvars[groups.testers[tester_item]].ansible_user }}@{{ hostvars[groups.testers[tester_item]].ansible_host }} "sudo tc qdisc add dev {{ hostvars[groups.testers[tester_item]].interface }} root netem delay {{ item.delay_tm }}ms {{ item.variance_tm }}ms distribution normal loss {{ item.loss_tm }}%"
-    else
-      echo "No QoS to apply to tester"
-    fi
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_add.yml"
   loop: "{{ range(0, groups.testers|length, 1)|list }}"
   loop_control:
-    loop_var: tester_item
+    loop_var: hitem

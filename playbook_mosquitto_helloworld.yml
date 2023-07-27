@@ -19,27 +19,33 @@
       mosquitto_version: 1.6.15
       mosquitto_port: 31883
     netem:
-      - name: loc
-        delay_intra: 0    
-        variance_intra: 0 
-        loss_intra: 0     
-        delay_tm: 0       
-        variance_tm: 0    
-        loss_tm: 0  
-      - name: tm
-        delay_intra: 0
-        variance_intra: 0
-        loss_intra: 0
-        delay_tm: 12.5
-        variance_tm: 2.5
-        loss_tm: 0.2
-      - name: intra
-        delay_intra: 1.25
-        variance_intra: 0.25
-        loss_intra: 0.02 
-        delay_tm: 1.25  
-        variance_tm: 0.25 
-        loss_tm: 0.02
+      - name: qos-empty
+        intra: 
+          delay: 0
+          variance: 0
+          loss: 0
+        tm:   
+          delay: 0   
+          variance: 0    
+          loss: 0  
+      - name: qos-tester
+        intra: 
+          delay: 0
+          variance: 0
+          loss: 0
+        tm:   
+          delay: 12.5      
+          variance: 2.5   
+          loss: 0.2
+      - name: qos-intra-tester
+        intra: 
+          delay: 1.25
+          variance: 0.25
+          loss: 0.02
+        tm: 
+          delay: 1.25
+          variance: 0.25
+          loss: 0.02
       
   tasks:
 
