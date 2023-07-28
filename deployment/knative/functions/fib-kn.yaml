@@ -1,0 +1,21 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: fib-kn
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: fib-kn-0
+      annotations:
+        # Knative concurrency-based autoscaling (default).
+        autoscaling.knative.dev/class: kpa.autoscaling.knative.dev
+        autoscaling.knative.dev/metric: concurrency
+        # Target 10 requests in-flight per pod.
+        autoscaling.knative.dev/target: "10"
+        autoscaling.knative.dev/min-scale: "1"
+    spec:
+      containers:
+        - image: docker.io/fcarp10/fib-kn:latest
+          ports:
+            - containerPort: 8080
