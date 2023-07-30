@@ -72,8 +72,8 @@ sudo -E kubectl --namespace kourier-system get service kourier
 echo "Configuring DNS..."
 sudo -E kubectl apply -f https://github.com/knative/serving/releases/download/knative-$VERSION/serving-default-domain.yaml
 
-echo "Inslling HPA autoscaling..."
-sudo -E kubectl apply -f https://github.com/knative/serving/releases/download/knative-$VERSION/serving-hpa.yaml
+# echo "Inslling HPA autoscaling..."
+# sudo -E kubectl apply -f https://github.com/knative/serving/releases/download/knative-$VERSION/serving-hpa.yaml
 
 functions_deploy $FUNCTIONS
 sleep 5
