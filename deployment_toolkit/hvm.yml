@@ -51,8 +51,8 @@
     insertafter: 'module Variables'
     line: '    $NUM_WORKERS = {{ node_number }}'
 
-#- name: destroy old Vagrant machines
-#  ansible.builtin.script: "{{ toolkit_dir }}/vagrant/destroy_machines.sh /tmp/benchfaster"
+- name: destroy old Vagrant machines
+  ansible.builtin.script: "{{ toolkit_dir }}/vagrant/destroy_machines.sh /tmp/benchfaster"
 
 - name: start Vagrant machines
   shell:                                                                                                
@@ -81,7 +81,9 @@
     name: headnode
     interface: eth0
     arch: amd64
-    groups: vms
+    groups:
+      - vms
+      - headnodes
     headnode: true
     ansible_port: 22
     ansible_ssh_host: "{{ headnodeip.stdout }}"

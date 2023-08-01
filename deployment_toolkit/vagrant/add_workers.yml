@@ -22,7 +22,9 @@
 - name: Add worker VM to inventory
   ansible.builtin.add_host:
     name: "worker{{ vm_worker_index }}"
-    groups: vms
+    groups: 
+      - vms
+      - workers
     arch: amd64
     ansible_port: 22
     ansible_ssh_host: "{{ workerip.stdout }}"

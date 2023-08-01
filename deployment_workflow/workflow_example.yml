@@ -14,14 +14,8 @@
       #  when: 
       #    - "'hypervisors' not in groups"
       #
-      #- name: Initialize BenchFaster
-      #  ansible.builtin.include_tasks: "deployment_toolkit/init.yml"
-      #
-      #- name: Deploy Nebula network
-      #  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_network_mm.yml"
-      #  when: 
-      #    - "'hypervisors' not in groups"
 
+### VMs
 - name: Deploy VMs
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/hvm.yml"
   args:
@@ -33,14 +27,6 @@
     loop_var: current_hv
   when: "'hypervisors' in groups"
 
-- name: Generate nebula certificates
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
-
-- name: Copy nebula certificates
-  copy:
-    src: "{{ toolkit_dir }}/nebula"
-    dest: /tmp/benchfaster/
- 
 - name: Register headnode (VM)
   ansible.builtin.set_fact:
     headnode: "{{ hostvars[groups.vms[i]] }}"
@@ -49,46 +35,178 @@
     index_var: i
     loop_var: headnode_item
   when:
+    - "'hypervisors' in groups"
     - "hostvars[headnode_item].headnode is defined"
 
-- name: Install nebula on headnode (VM)
-  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ headnode.arch }} lighthouse"
+### To add: add devices from "machines" to group
+
+### Nebula
+- name: Generate nebula certificates
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+
+- name: Copy nebula certificates to workers
+  copy:
+    src: "{{ toolkit_dir }}/nebula"
+    dest: /tmp/benchfaster/
   delegate_to: "{{ current_host }}"
-  loop: "{{ groups['vms'] }}"
+  loop: "{{ groups['workers'] }}"
   loop_control:
     loop_var: current_host
-  when: 
-    - "'hypervisors' in groups"
-    - "hostvars[current_host].headnode is defined"
 
-- name: Install Nebula on workers (VM)
-  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[current_host].arch }} {{ hostvars[current_host].inventory_hostname }} {{ headnodeip }}"
+- name: Copy nebula certificates to headnode
+  copy:
+    src: "{{ toolkit_dir }}/nebula"
+    dest: /tmp/benchfaster/
   delegate_to: "{{ current_host }}"
-  loop: "{{ groups['vms'] }}"
+  loop: "{{ groups['headnodes'] }}"
   loop_control:
     loop_var: current_host
-  when: 
-    - "'hypervisors' in groups"
-    - "hostvars[current_host].headnode is not defined"
+ 
+- name: Install nebula on headnode
+  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ headnode.arch }} lighthouse 127.0.0.99"
+  delegate_to: "{{ groups['headnodes'][0] }}"
 
-- name: Install k3s on headnode (VM)
-  ansible.builtin.script: "{{ toolkit_dir }}/k3s/k3s_headnode.sh {{ k3s.k3s_version }}"
+- name: Install Nebula on workers
+  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[current_host].arch }} {{ hostvars[current_host].inventory_hostname }} {{ headnodeip.stdout }}"
   delegate_to: "{{ current_host }}"
-  loop: "{{ groups['vms'] }}"
+  loop: "{{ groups['workers'] }}"
   loop_control:
     loop_var: current_host
-  when: 
-    - "'hypervisors' in groups"
-    - "hostvars[current_host].headnode is defined"
 
+### K3s
+- name: Create k3s server config directory
+  file:
+    path: /tmp/k3s
+    state: directory
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Create k3s agent config directory
+  file:
+    path: /tmp/k3s
+    state: directory
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Create k3s server config file
+  file:
+    path: /tmp/k3s/config.yaml
+    state: touch
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Create k3s agent config file
+  file:
+    path: /tmp/k3s/config.yaml
+    state: touch
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Configure k3s server advertise address
+  ansible.builtin.lineinfile:
+    path: /tmp/k3s/config.yaml
+    regexp: 'advertise-address:'
+    line: 'advertise-address: 192.168.50.99'
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Configure k3s client flannel interface
+  ansible.builtin.lineinfile:
+    path: /tmp/k3s/config.yaml
+    regexp: 'flannel-iface:'
+    line: 'flannel-iface: nebula'
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Configure k3s server flannel interface
+  ansible.builtin.lineinfile:
+    path: /tmp/k3s/config.yaml
+    regexp: 'flannel-iface:'
+    line: 'flannel-iface: nebula'
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Configure k3s server admission plugins
+  ansible.builtin.lineinfile:
+    path: /tmp/k3s/config.yaml
+    regexp: 'kube-apiserver-arg:'
+    line: 'kube-apiserver-arg: enable-admission-plugins=PodNodeSelector'
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Install k3s on headnode
+  ansible.builtin.shell: |
+    /usr/local/bin/k3s-uninstall.sh > /dev/null
+    /usr/local/bin/k3s-agent-uninstall.sh > /dev/null
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.k3s_version }}" K3S_NODE_NAME="headnode" INSTALL_K3S_EXEC="--config /tmp/k3s/config.yaml " sh -
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Read k3s token from headnode
+  shell:
+    cmd: cat /var/lib/rancher/k3s/server/node-token
+  become: yes
+  register: k3s_token
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Print the k3s token stdout
+  ansible.builtin.debug:
+    msg: "K3s token: {{ k3s_token.stdout }}"
+
+- name: Configure k3s agent setting token
+  ansible.builtin.lineinfile:
+    path: /tmp/k3s/config.yaml
+    regexp: 'token:'
+    line: "token: {{ k3s_token.stdout }}"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Configure k3s agent setting hostname
+  ansible.builtin.lineinfile:
+    path: /tmp/k3s/config.yaml
+    regexp: 'node-name:'
+    line: "node-name: {{ hostvars[current_host].inventory_hostname }}"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Configure k3s agent setting port
+  ansible.builtin.lineinfile:
+    path: /tmp/k3s/config.yaml
+    regexp: 'server:'
+    line: "server: https://192.168.50.99:{{ k3s.k3s_port }}"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Install k3s on workers
+  ansible.builtin.shell: |
+    /usr/local/bin/k3s-uninstall.sh > /dev/null
+    /usr/local/bin/k3s-agent-uninstall.sh > /dev/null
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.k3s_version }}" K3S_NODE_NAME="{{ hostvars[current_host].inventory_hostname }}" K3S_URL="https://192.168.50.99:{{ k3s.k3s_port }}" K3S_TOKEN="{{ k3s_token.stdout }}" INSTALL_K3S_EXEC="--config /tmp/k3s/config.yaml" sh -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Wait for all nodes to become ready
+  ansible.builtin.shell: kubectl get nodes
+  become: yes
+  register: result
+  until: result.stdout.find("NotReady") == -1
+  retries: 24
+  delay: 5
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+### Payload
 - name: Provision headnode
-  command: hostnamectl
-  delegate_to: "{{ current_host }}"
-  loop: "{{ groups['machines'] }}"
-  loop_control:
-    loop_var: current_host
-  when: 
-    - "'hypervisors' not in groups"
+  command: kubectl get nodes
+  become: yes
+  delegate_to: "{{ groups['headnodes'][0] }}"
 
     #- name: Install OpenFaas on headnode
     #  ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"

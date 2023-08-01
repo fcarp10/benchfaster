@@ -1,16 +1,13 @@
 #!/bin/bash
 
 NEBULA_VERSION=$1
-NEBULA_CONFIG=$2/benchfaster/nebula
+NEBULA_CONFIG=$2/benchfaster/nebula/config
 ARCH=$3
 NEBULA_WORKER=$4
 
 sudo sed -i '/lighthouse/d' /etc/hosts
 
-if [ $NEBULA_WORKER != "lighthouse" ]
-then 
-    echo $5 lighthouse | sudo tee -a /etc/hosts
-fi
+echo $5 lighthouse | sudo tee -a /etc/hosts
 
 TMP="/tmp"
 
