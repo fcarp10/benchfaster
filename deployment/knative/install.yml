@@ -5,7 +5,7 @@
       machine \
       {{ knative.port }} \
       {{ knative.version }} \
-      {{ knative.functions }} \
+      {{ functions_item }} \
       {{ address_benchmark }} \
       {{ registry.reg_dname }} \
       {{ registry.reg_port }}" \

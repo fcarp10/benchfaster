@@ -10,7 +10,7 @@ functions_deploy() {
 functions_check() {
 	for funct in $1; do
 		echo "Waiting for function ${funct}..."
-		sudo -E kubectl -n default rollout status deploy/${funct}-0-deployment --timeout=60s
+		sudo -E kubectl -n default rollout status deploy/${funct}-00001-deployment --timeout=60s
 		if [ $? -ne 0 ]; then echo "Error: Function ${funct} timed out, continuing..."; fi
 	done
 }
@@ -61,12 +61,15 @@ sudo -E kubectl patch configmap/config-network \
   --namespace knative-serving \
   --type merge \
   --patch '{"data":{"ingress-class":"kourier.ingress.networking.knative.dev"}}'
-sleep 60 ## TO-DO: implement a function to wait until EXTERNAL-IP is ready 
 sudo kubectl patch configmap/config-domain \
   -n knative-serving \
   --type merge \
   -p '{"data":{"'${ADDRESS}'.nip.io":""}}'
 sudo -E kubectl patch svc kourier -p '{"spec":{"externalIPs":["'${ADDRESS}'"]}}' -n kourier-system
+until sudo kubectl get pods -n kourier-system | grep "1/1" | grep "Running" >/dev/null; do
+    echo "Waiting for Kourier to be ready..."
+    sleep 10
+done
 sudo -E kubectl --namespace kourier-system get service kourier
 
 echo "Configuring DNS..."

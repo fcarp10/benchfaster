@@ -7,15 +7,16 @@ spec:
   template:
     metadata:
       annotations:
-        autoscaling.knative.dev/class: kpa.autoscaling.knative.dev
+        autoscaling.knative.dev/class: "kpa.autoscaling.knative.dev"
         # autoscaling.knative.dev/metric: "rps"
         # autoscaling.knative.dev/metric: concurrency
-        # autoscaling.knative.dev/target: "5"
+        autoscaling.knative.dev/target: "10"
         # autoscaling.knative.dev/window: "6s"
         # autoscaling.knative.dev/panic-threshold-percentage: "120.0"
         # autoscaling.knative.dev/panic-window-percentage: 20.0
-        autoscaling.knative.dev/min-scale: "1"
+        # autoscaling.knative.dev/min-scale: "1"
     spec:
+      containerConcurrency: 100
       containers:
         - image: docker.io/fcarp10/fib-kn:latest
           ports:

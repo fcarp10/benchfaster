@@ -7,11 +7,11 @@
 - name: Run scalability test with JMeter
   ansible.builtin.shell: |
     jmeter -n -t {{ tests_dir }}/knative/scalability/scalability.jmx \ 
-      -Jrequest.ip=fib-kn.default.{{ address_benchmark }}.nip.io \
+      -Jrequest.ip={{ functions_item }}.default.{{ address_benchmark }}.nip.io \
       -Jrequest.port={{ knative.port }} \
-      -Jtest.threads={{ pb_item.1 }} \
-      -Jtest.argument={{ pb_item.2 }} \
-      -l {{ results_path.path }}/scalability-knative_W-{{ num_workers }}_Q-{{ pb_item.0.name }}_T-{{ pb_item.1 }}_L-{{ pb_item.2 }}.csv
+      -Jtest.threads={{ num_threads_item }} \
+      -Jtest.argument={{ loads_item }} \
+      -l {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ num_workers }}_Q-{{ qos_item }}_T-{{ num_threads_item }}_L-{{ loads_item }}.csv
 
 - name: Copy results to control node
   ansible.builtin.command: rsync -a "{{ ansible_user }}"@"{{ ansible_host }}":/home/"{{ ansible_user }}"/benchfaster/_results "{{ playbook_dir }}"/
