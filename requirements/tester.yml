@@ -2,6 +2,8 @@
   ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_jmeter.yml"
 - name: Install K6
   ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_k6.yml"
+- name: Install Hey
+  ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_hey.yml"
 - name: Install Nebula
   ansible.builtin.import_playbook: "{{ playbook_dir }}/tester_nebula.yml"
 - name: Install Docker
