@@ -9,12 +9,6 @@
     state: directory
   register: results_path
 
-      #- name: Generate Nebula certificates
-      #  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
-      #  when: 
-      #    - "'hypervisors' not in groups"
-      #
-
 ### VMs
 - name: Deploy VMs
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/hvm.yml"
@@ -39,6 +33,41 @@
     - "hostvars[headnode_item].headnode is defined"
 
 ### To add: add devices from "machines" to group
+- name: Set group for workers
+  add_host:
+    name: "{{ node_item }}"
+    groups: workers
+  delegate_to: "{{ node_item }}"
+  loop: "{{ groups['machines'] }}"
+  loop_control:
+    loop_var: node_item
+  when:
+    - "'hypervisors' not in groups"
+    - "hostvars[node_item].headnode is not defined"
+    - "hostvars[node_item].inventory_hostname not in groups['testers']"
+
+- name: Set group for headnode
+  add_host:
+    name: "{{ node_item }}"
+    groups: headnodes
+  delegate_to: "{{ node_item }}"
+  loop: "{{ groups['machines'] }}"
+  loop_control:
+    loop_var: node_item
+  when:
+    - "'hypervisors' not in groups"
+    - "hostvars[node_item].headnode is defined"
+    - "hostvars[node_item].inventory_hostname not in groups['testers']"
+
+# TODO: respect interface setting for this command
+- name: Determine headnode IP
+  shell:
+    cmd: bash -c "ip addr sh eth0 | grep 'inet ' | awk '{print substr(\$2, 1, length(\$2)-3)}'"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+  register: headnodeip
+  when:
+    - "'hypervisors' not in groups"
+    - "hostvars[groups['headnodes'][0]].headnode is defined"
 
 ### Nebula
 - name: Generate nebula certificates
@@ -61,9 +90,13 @@
   loop: "{{ groups['headnodes'] }}"
   loop_control:
     loop_var: current_host
- 
+
+- name: debug
+  ansible.builtin.debug:
+    msg: "{{ hostvars[groups['headnodes'][0]].arch }}"
+
 - name: Install nebula on headnode
-  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ headnode.arch }} lighthouse 127.0.0.99"
+  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[groups['headnodes'][0]].arch }} lighthouse 127.0.0.99"
   delegate_to: "{{ groups['headnodes'][0] }}"
 
 - name: Install Nebula on workers
