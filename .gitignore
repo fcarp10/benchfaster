@@ -7,3 +7,5 @@ cert/
 inventory/
 playbook*
 ansible.log
+*.drawio.bkp
+*.drawio.dtmp
