@@ -79,6 +79,15 @@
   loop_control:
     loop_var: current_host
 
+- name: Copy payload folder to headnode
+  copy:
+    src: "{{ toolkit_dir }}/payload"
+    dest: /tmp/benchfaster/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
 #TODO: check this for redundancy
 - name: Create results directory
   ansible.builtin.file:

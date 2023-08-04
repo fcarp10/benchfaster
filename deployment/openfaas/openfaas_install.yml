@@ -9,3 +9,4 @@
       {{ registry.reg_dname }} \
       {{ registry.reg_port }}"
   become: yes
+  delegate_to: "{{ groups['headnodes'][0] }}"
