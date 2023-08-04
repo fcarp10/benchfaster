@@ -1,7 +1,6 @@
 - name: Mosquitto helloworld playbook
   hosts: testers
   vars:
-    num_workers: 1
     num_threads: [1, 10]
     nebula: 
       nebula_version: 1.5.2

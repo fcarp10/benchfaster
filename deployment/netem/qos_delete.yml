@@ -1,17 +1,29 @@
 - name: Delete QoS set "{{ item.name }}" (intra)
   ansible.builtin.shell: |
-    echo "Deleting QoS (intra) [interface: {{ hostvars[groups.machines[machine_item]].interface }}]..."  >> {{ results_path.path }}/logs.txt
-    ssh -n {{ hostvars[groups.machines[machine_item]].ansible_user }}@{{ hostvars[groups.machines[machine_item]].ansible_host }} "sudo tc qdisc delete dev {{ hostvars[groups.machines[machine_item]].interface }} root"
-  loop: "{{ range(0, groups.machines|length, 1)|list }}"
+    echo "Deleting QoS (intra) [interface: {{ hostvars[machine_item].interface }}]..."
+    tc qdisc delete dev "{{ hostvars[machine_item].interface }}" root
+  become: yes
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: machine_item
+  ignore_errors: True
+
+- name: Delete QoS set "{{ item.name }}" (intra)
+  ansible.builtin.shell: |
+    echo "Deleting QoS (intra) [interface: {{ hostvars[machine_item].interface }}]..."
+    tc qdisc delete dev "{{ hostvars[machine_item].interface }}" root
+  become: yes
+  loop: "{{ groups['workers'] }}"
   loop_control:
     loop_var: machine_item
   ignore_errors: True
 
 - name: Delete QoS set "{{ item.name }}" (testers)
   ansible.builtin.shell: |
-    echo "Deleting QoS (testers) [interface: {{ hostvars[groups.testers[tester_item]].interface }}]..." >> {{ results_path.path }}/logs.txt
-    ssh -n {{ hostvars[groups.testers[tester_item]].ansible_user }}@{{ hostvars[groups.testers[tester_item]].ansible_host }} "sudo tc qdisc delete dev {{ hostvars[groups.testers[tester_item]].interface }} root"
-  loop: "{{ range(0, groups.testers|length, 1)|list }}"
+    echo "Deleting QoS (testers) [interface: {{ hostvars[tester_item].interface }}]..."
+    tc qdisc delete dev "{{ hostvars[tester_item].interface }}" root
+  become: yes
+  loop: "{{ groups['workers'] }}"
   loop_control:
     loop_var: tester_item
   ignore_errors: True

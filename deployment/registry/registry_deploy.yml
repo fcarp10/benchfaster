@@ -1,3 +1,4 @@
+#TODO: migrate this to a proper host description
 - name: Remove old local container registry
   ansible.builtin.shell: |
     ssh -n {{ reg_user }}@{{ reg_ip }} "docker container stop registry && docker container rm -v registry"

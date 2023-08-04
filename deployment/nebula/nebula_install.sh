@@ -1,15 +1,13 @@
 #!/bin/bash
 
 NEBULA_VERSION=$1
-NEBULA_CONFIG=$2/benchfaster/deployment/nebula/config
+NEBULA_CONFIG=$2/benchfaster/nebula/config
 ARCH=$3
 NEBULA_WORKER=$4
-NEBULA_LIGHTHOUSE_IF=$5
 
 sudo sed -i '/lighthouse/d' /etc/hosts
 
-if [ $NEBULA_WORKER = "lighthouse" ]; then echo `ip addr sh $NEBULA_LIGHTHOUSE_IF | grep 'inet ' | awk '{print substr($2, 1, length($2)-3)}'` > $2/benchfaster/lighthouse.ip ; fi
-echo $(cat $2/benchfaster/lighthouse.ip) lighthouse | sudo tee -a /etc/hosts
+echo $5 lighthouse | sudo tee -a /etc/hosts
 
 TMP="/tmp"
 

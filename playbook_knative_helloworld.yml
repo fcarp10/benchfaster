@@ -1,6 +1,5 @@
 - hosts: testers
   vars:
-    num_workers: 1
     nebula: 
       nebula_version: 1.5.2
       nebula_address: lighthouse

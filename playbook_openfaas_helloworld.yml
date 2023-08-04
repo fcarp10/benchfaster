@@ -1,11 +1,6 @@
 - name: OpenFaaS helloworld playbook
   hosts: testers
   vars:
-    num_workers: 4
-    vagrant:
-      vm_cpu: 2
-      vm_mem: 4096
-      vm_image: "generic/ubuntu2004"
     nebula: 
       nebula_version: 1.5.2
       nebula_address: lighthouse

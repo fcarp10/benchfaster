@@ -1,7 +1,5 @@
 - name: Install OpenFaas on headnode
-  ansible.builtin.shell: |
-    ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} \
-      "benchfaster/deployment/openfaas/openfaas_install.sh \
+  ansible.builtin.script: "{{ toolkit_dir }}/openfaas/openfaas_install.sh \
       machine \
       {{ openfaas.openfaas_port }} \
       {{ openfaas.openfaas_version }} \
@@ -9,5 +7,5 @@
       {{ openfaas.openfaas_functions }} \
       false \
       {{ registry.reg_dname }} \
-      {{ registry.reg_port }}" \
-      >> {{ results_path.path }}/logs.txt
+      {{ registry.reg_port }}"
+  become: yes
