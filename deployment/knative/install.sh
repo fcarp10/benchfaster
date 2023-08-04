@@ -1,28 +1,10 @@
 #!/bin/bash
 
-functions_deploy() {
-	for funct in $1; do
-		echo "Deploying ${funct}..."
-        sudo -E kubectl apply -f $PWD/knative/functions/${funct}.yaml
-	done
-}
-
-functions_check() {
-	for funct in $1; do
-		echo "Waiting for function ${funct}..."
-		sudo -E kubectl -n default rollout status deploy/${funct}-00001-deployment --timeout=60s
-		if [ $? -ne 0 ]; then echo "Error: Function ${funct} timed out, continuing..."; fi
-	done
-}
-
-
 DEVTYPE=$1
-PORT=$2
-VERSION=$3
-FUNCTIONS=$4
-ADDRESS=$5
-REPO_NAME=$6
-REPO_PORT=$7
+VERSION=$2
+ADDRESS=$3
+REPO_NAME=$4
+REPO_PORT=$5
 
 if [ $DEVTYPE = "vm" ]
 then
@@ -43,7 +25,6 @@ fi
 
 echo "Labelling K3s worker nodes..."
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> /home/`whoami`/.bashrc
 for worker in $(sudo -E kubectl get nodes | grep -v control-plane | grep -v NAME \
     | sed 's/\s.*$//')
 do
@@ -74,14 +55,5 @@ sudo -E kubectl --namespace kourier-system get service kourier
 
 echo "Configuring DNS..."
 sudo -E kubectl apply -f https://github.com/knative/serving/releases/download/knative-$VERSION/serving-default-domain.yaml
-
-# echo "Inslling HPA autoscaling..."
-# sudo -E kubectl apply -f https://github.com/knative/serving/releases/download/knative-$VERSION/serving-hpa.yaml
-
-functions_deploy $FUNCTIONS
-sleep 5
-functions_check $FUNCTIONS
-sudo -E kubectl get ksvc -n default
-sleep 5
 
 echo "Knative deployment finished!"

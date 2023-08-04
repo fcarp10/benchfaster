@@ -1,0 +1,4 @@
+- name: Delete Knative function
+  ansible.builtin.shell: |
+    ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} "sudo -E kubectl delete service.serving.knative.dev {{ functions_item }}"
+    ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} "sudo -E kubectl wait --for=delete pod --all -n default --timeout=10m"

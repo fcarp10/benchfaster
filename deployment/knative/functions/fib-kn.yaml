@@ -8,15 +8,14 @@ spec:
     metadata:
       annotations:
         autoscaling.knative.dev/class: "kpa.autoscaling.knative.dev"
-        # autoscaling.knative.dev/metric: "rps"
-        # autoscaling.knative.dev/metric: concurrency
+        autoscaling.knative.dev/metric: "concurrency"
         autoscaling.knative.dev/target: "10"
-        # autoscaling.knative.dev/window: "6s"
-        # autoscaling.knative.dev/panic-threshold-percentage: "120.0"
-        # autoscaling.knative.dev/panic-window-percentage: 20.0
-        # autoscaling.knative.dev/min-scale: "1"
+        autoscaling.knative.dev/window: "20s"
+        autoscaling.knative.dev/panic-window-percentage: "25.0"
+        autoscaling.knative.dev/panic-threshold-percentage: "120.0"
+        # max-scale-up-rate: "500.0"
     spec:
-      containerConcurrency: 100
+      # containerConcurrency: 50
       containers:
         - image: fcarp10/fib-kn:latest
           ports:

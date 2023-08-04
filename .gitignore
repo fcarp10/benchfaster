@@ -6,3 +6,4 @@ cert/
 .vscode/
 inventory/
 playbook*
+ansible.log

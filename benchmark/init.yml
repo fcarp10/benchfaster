@@ -1,0 +1,17 @@
+- name: Set results directory
+  ansible.builtin.set_fact:
+    foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
+
+- name: Set toolkit directory
+  ansible.builtin.set_fact:
+    toolkit_dir: "{{ playbook_dir }}/deployment"
+    tests_dir: "{{ playbook_dir }}/benchmark"
+
+- name: Create results directory
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/benchfaster/_results/{{ foldername }}"
+    state: directory
+  register: results_path
+
+- name: Move ansible.log to results folder
+  command: mv {{ playbook_dir }}/ansible.log /home/{{ ansible_user }}/benchfaster/_results/{{ foldername }}/ansible.log
