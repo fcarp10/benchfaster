@@ -10,7 +10,8 @@
     knative:
       version: v1.10.0
       port: 80
-      functions: fib-kn
+      functions: 
+        - fib-kn
     registry:
       reg_user:
       reg_ip: 
@@ -47,14 +48,20 @@
       
   tasks:
 
-    - name: Set results directory
-      ansible.builtin.set_fact:
-        foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
-    
+    - name: Initialize benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/init.yml"
+         
     - name: Run Knative helloworld test
       ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/knative/helloworld/helloworld_jmeter.yml"
-      with_items:
-        - "{{ netem }}"
+      vars:
+        - item: "{{ pb_item.0 }}"
+        - qos_item: "{{ pb_item.0.name }}"
+        - functions_item: "{{ pb_item.1 }}"
+        - num_iterations: 100
+        - load: 1
+      loop: "{{ netem |  product(knative.functions)  | list }}"
+      loop_control:
+        loop_var: pb_item
 
 
 

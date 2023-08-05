@@ -6,3 +6,7 @@ cert/
 .vscode/
 inventory/
 playbook*
+ansible.log
+*.drawio.bkp
+*.drawio.dtmp
+_data*

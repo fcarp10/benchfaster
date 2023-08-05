@@ -4,14 +4,17 @@
 - name: Install Knative
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/install.yml"
 
+- name: Install Knative functions
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/functions/install.yml"
+
 - name: Run helloworld test with JMeter
   ansible.builtin.shell: |
     jmeter -n -t {{ tests_dir }}/knative/helloworld/helloworld.jmx \ 
-      -Jrequest.ip=fib-kn.default.{{ address_benchmark }}.nip.io \
+      -Jrequest.ip={{ functions_item }}.default.{{ address_benchmark }}.nip.io \
       -Jrequest.port={{ knative.port }} \
-      -Jtest.iterations=100 \
-      -Jtest.argument=1 \
-      -l {{ results_path.path }}/scalability-knative_W-{{ num_workers }}_Q-{{ item.name }}.csv
+      -Jtest.iterations={{ num_iterations }} \
+      -Jtest.argument={{ load }} \
+      -l {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ num_workers }}_Q-{{ item.name }}.csv
 
 - name: Copy results to control node
   ansible.builtin.command: rsync -a "{{ ansible_user }}"@"{{ ansible_host }}":/home/"{{ ansible_user }}"/benchfaster/_results "{{ playbook_dir }}"/

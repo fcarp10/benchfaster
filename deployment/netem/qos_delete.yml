@@ -16,7 +16,8 @@
   loop: "{{ groups['workers'] }}"
   loop_control:
     loop_var: machine_item
-  ignore_errors: True
+  register: result
+  failed_when: "result.rc != 0 and result.rc != 2"
 
 - name: Delete QoS set "{{ item.name }}" (testers)
   ansible.builtin.shell: |
@@ -26,4 +27,5 @@
   loop: "{{ groups['workers'] }}"
   loop_control:
     loop_var: tester_item
-  ignore_errors: True
+  register: result
+  failed_when: "result.rc != 0 and result.rc != 2"
