@@ -14,4 +14,5 @@
   register: results_path
 
 - name: Move ansible.log to results folder
-  command: mv {{ playbook_dir }}/ansible.log /home/{{ ansible_user }}/benchfaster/_results/{{ foldername }}/ansible.log
+  command: scp {{ playbook_dir }}/ansible.log {{ ansible_user }}@{{ ansible_host }}:/home/{{ ansible_user }}/benchfaster/_results/{{ foldername }}/ansible.log
+  delegate_to: localhost

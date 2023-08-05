@@ -1,0 +1,17 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: sleep
+  namespace: default
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/class: "kpa.autoscaling.knative.dev"
+        autoscaling.knative.dev/max-scale: "20"
+    spec:
+      containerConcurrency: 1
+      containers:
+        - image: fcarp10/sleep:latest
+          ports:
+            - containerPort: 8082
