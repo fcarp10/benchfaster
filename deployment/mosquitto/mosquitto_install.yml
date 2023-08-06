@@ -1,4 +1,3 @@
 - name: Install Mosquitto
-  ansible.builtin.shell: |
-    benchfaster/deployment/mosquitto/mosquitto_install.sh
+  ansible.builtin.script: "{{ toolkit_dir }}/mosquitto/mosquitto_install.sh"
   delegate_to: "{{ groups['headnodes'][0] }}"
