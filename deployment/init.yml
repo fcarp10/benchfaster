@@ -32,7 +32,7 @@
 # TODO: respect interface setting for this command
 - name: Determine headnode IP
   shell:
-    cmd: bash -c "ip addr sh eth0 | grep 'inet ' | awk '{print substr(\$2, 1, length(\$2)-3)}'"
+    cmd: bash -c "ip addr sh {{ hostvars[groups['headnodes'][0]].interface }} | grep 'inet ' | awk '{print substr(\$2, 1, length(\$2)-3)}'"
   delegate_to: "{{ groups['headnodes'][0] }}"
   register: headnodeip
   when:
