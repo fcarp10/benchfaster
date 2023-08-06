@@ -63,6 +63,7 @@
 
 - name: Generate nebula certificates
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+  delegate_to: localhost
 
 - name: Copy nebula certificates to workers
   copy:
