@@ -61,6 +61,9 @@
     - "'hypervisors' in groups"
     - "hostvars[headnode_item].headnode is defined"
 
+- name: Generate nebula certificates
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+
 - name: Copy nebula certificates to workers
   copy:
     src: "{{ toolkit_dir }}/nebula"
@@ -91,7 +94,7 @@
 #TODO: check this for redundancy
 - name: Create results directory
   ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/benchfaster/_results/{{ foldername }}"
+    path: "/tmp/benchfaster/_results/{{ foldername }}"
     state: directory
   register: results_path
 
