@@ -1,3 +1,2 @@
 - name: Install RabbitMQ
-  ansible.builtin.shell: |
-    benchfaster/deployment/rabbitmq/rabbitmq_install.sh
+  ansible.builtin.script: "{{ toolkit_dir }}/rabbitmq/rabbitmq_install.sh"

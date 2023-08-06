@@ -14,11 +14,13 @@
       --autoack \
       --id "test 1" \
       --time 5 \
-    >> {{ results_path.path }}/helloworld-amqp_W-{{ num_workers }}_Q-{{ pb_item.0.name }}_T-{{ pb_item.1 }}.txt
+    >> {{ results_path.path }}/helloworld-mqtt_W-{{ groups['workers'] | length }}_Q-{{ pb_item.0.name }}_T-{{ pb_item.1 }}.txt
 
 - name: Copy results to control node
-  ansible.builtin.command: rsync -a "{{ ansible_user }}"@"{{ ansible_host }}":/home/"{{ ansible_user }}"/benchfaster/_results "{{ playbook_dir }}"/
-  delegate_to: 127.0.0.1
+  synchronize:
+    src: "{{ results_path.path }}"
+    dest: "{{ playbook_dir }}/_results/"
+    mode: pull
 
 - name: Delete BenchFaster
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/delete.yml"
