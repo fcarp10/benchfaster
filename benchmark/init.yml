@@ -7,12 +7,9 @@
     toolkit_dir: "{{ playbook_dir }}/deployment"
     tests_dir: "{{ playbook_dir }}/benchmark"
 
+#TODO: check this for redundancy
 - name: Create results directory
   ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/benchfaster/_results/{{ foldername }}"
+    path: "/tmp/benchfaster/_results/{{ foldername }}"
     state: directory
   register: results_path
-
-- name: Move ansible.log to results folder
-  command: scp {{ playbook_dir }}/ansible.log {{ ansible_user }}@{{ ansible_host }}:/home/{{ ansible_user }}/benchfaster/_results/{{ foldername }}/ansible.log
-  delegate_to: localhost

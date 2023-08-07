@@ -1,8 +1,3 @@
-- name: Set toolkit directory
-  ansible.builtin.set_fact:
-    toolkit_dir: "{{ playbook_dir }}/deployment"
-    tests_dir: "{{ playbook_dir }}/benchmark"
-
 - name: Set group for workers
   add_host:
     name: "{{ node_item }}"
@@ -94,13 +89,6 @@
   loop: "{{ groups['headnodes'] }}"
   loop_control:
     loop_var: current_host
-
-#TODO: check this for redundancy
-- name: Create results directory
-  ansible.builtin.file:
-    path: "/tmp/benchfaster/_results/{{ foldername }}"
-    state: directory
-  register: results_path
 
 - name: Delete QoS from all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"

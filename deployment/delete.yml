@@ -1,3 +1,15 @@
+- name: Copy results to control node
+  ansible.builtin.synchronize:
+    src: "{{ results_path.path }}"
+    dest: "{{ playbook_dir }}/_results/"
+    mode: pull
+
+- name: Copy ansible logs to results folder
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/ansible.log"
+    dest: "{{ playbook_dir }}/_results/{{ foldername }}"
+  delegate_to: localhost
+
 - name: Delete QoS from all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"
   when: hvm is not defined

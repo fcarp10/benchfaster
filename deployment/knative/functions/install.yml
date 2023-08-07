@@ -1,6 +1,8 @@
 - name: Install Knative function
   ansible.builtin.shell: |
-    ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} "sudo -E kubectl apply -f /home/{{ headnode.ansible_user }}/benchfaster/deployment/knative/functions/{{ functions_item }}.yaml"
+    sudo -E kubectl apply -f /home/{{ ansible_user }}/benchfaster/deployment/knative/functions/{{ functions_item }}.yaml
     sleep 5
-    ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} "sudo -E kubectl -n default rollout status deploy/{{ functions_item }}-00001-deployment --timeout=60s"
+    sudo -E kubectl -n default rollout status deploy/{{ functions_item }}-00001-deployment --timeout=60s
     sleep 5
+  become: yes
+  delegate_to: "{{ groups['headnodes'][0] }}"

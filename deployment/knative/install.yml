@@ -1,10 +1,9 @@
 - name: Install Knative
-  ansible.builtin.shell: |
-    ssh -n {{ headnode.ansible_user }}@{{ headnode.ansible_host }} \
-      "benchfaster/deployment/knative/install.sh \
+  ansible.builtin.script: "{{ toolkit_dir }}/knative/install.sh \
       machine \
       {{ knative.version }} \
       {{ address_benchmark }} \
       {{ registry.reg_dname }} \
-      {{ registry.reg_port }}" \
-      >> {{ results_path.path }}/logs.txt
+      {{ registry.reg_port }}"
+  become: yes
+  delegate_to: "{{ groups['headnodes'][0] }}"
