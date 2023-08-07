@@ -20,7 +20,7 @@
       -Jrequest.port={{ knative.port }} \
       -Jtest.iterations={{ num_iterations }} \
       -Jtest.argument={{ load }} \
-      -l {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ num_workers }}_Q-{{ item.name }}.csv
+      -l {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ groups['workers'] | length }}_Q-{{ item.name }}.csv
 
 - name: Stop BenchFaster
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/stop.yml"

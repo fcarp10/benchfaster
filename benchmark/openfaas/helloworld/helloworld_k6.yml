@@ -10,7 +10,7 @@
       -e host={{ address_benchmark }} \
       -e port={{ openfaas.openfaas_port }} \
       --iterations 100 \
-      -o csv={{ results_path.path }}/helloworld-k6_openfaas_{{ filesuffix }}_{{ item.name }}.csv
+      -o csv={{ results_path.path }}/helloworld-k6_openfaas_{{ groups['workers'] | length }}_{{ item.name }}.csv
 
 - name: Stop BenchFaster
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/stop.yml"

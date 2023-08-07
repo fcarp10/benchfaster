@@ -14,7 +14,7 @@
       -Jrequest.port={{ openfaas.openfaas_port }} \
       -Jtest.threads={{ pb_item.1 }} \
       -Jtest.argument={{ pb_item.2 }} \
-      -l {{ results_path.path }}/scalability-openfaas_W-{{ num_workers }}_Q-{{ pb_item.0.name }}_T-{{ pb_item.1 }}_L-{{ pb_item.2 }}.csv
+      -l {{ results_path.path }}/scalability-openfaas_W-{{ groups['workers'] | length }}_Q-{{ pb_item.0.name }}_T-{{ pb_item.1 }}_L-{{ pb_item.2 }}.csv
 
 - name: Stop BenchFaster
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/stop.yml"
