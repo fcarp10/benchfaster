@@ -1,4 +1,4 @@
-- name: Initialize BenchFaster
+- name: Start BenchFaster
   ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/start.yml"
 
 - name: Install Mosquitto
@@ -17,11 +17,5 @@
       -no-progress \
     >> {{ results_path.path }}/helloworld-mqtt_W-{{ groups['workers'] | length }}_Q-{{ pb_item.0.name }}_T-{{ pb_item.1 }}.txt
 
-- name: Copy results to control node
-  synchronize:
-    src: "{{ results_path.path }}"
-    dest: "{{ playbook_dir }}/_results/"
-    mode: pull
-
-- name: Delete BenchFaster
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}deployment/core/stop.yml"
+- name: Stop BenchFaster
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/stop.yml"

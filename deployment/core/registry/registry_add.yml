@@ -11,7 +11,7 @@
     echo '{{ registry.reg_ip }} {{ registry.reg_dname }}' | tee -a /etc/hosts
     systemctl restart k3s*
   become: yes
-  loop: "{{ range(0, groups.machines|length, 1)|list }}"
+  delegate_to: "{{ hitem }}"
+  loop: "{{ groups['all'] }}"
   loop_control:
-    loop_var: machine_item
-  delegate_to: machine_item
+    loop_var: hitem
