@@ -1,29 +1,9 @@
-- name: Delete QoS set "{{ item.name }}" (intra)
-  ansible.builtin.shell: |
-    tc qdisc delete dev "{{ hostvars[machine_item].interface }}" root
+- name: Delete QoS
+  ansible.builtin.command: tc qdisc delete dev "{{ hostvars[hitem].interface }}" root
   become: yes
-  loop: "{{ groups['headnodes'] }}"
+  register: cmd_res
+  failed_when: cmd_res.rc != 0 and cmd_res.rc != 2
+  delegate_to: "{{ hitem }}"
+  loop: "{{ groups['all'] }}"
   loop_control:
-    loop_var: machine_item
-  register: result
-  failed_when: "result.rc != 0 and result.rc != 2"
-
-- name: Delete QoS set "{{ item.name }}" (intra)
-  ansible.builtin.shell: |
-    tc qdisc delete dev "{{ hostvars[machine_item].interface }}" root
-  become: yes
-  loop: "{{ groups['workers'] }}"
-  loop_control:
-    loop_var: machine_item
-  register: result
-  failed_when: "result.rc != 0 and result.rc != 2"
-
-- name: Delete QoS set "{{ item.name }}" (testers)
-  ansible.builtin.shell: |
-    tc qdisc delete dev "{{ hostvars[tester_item].interface }}" root
-  become: yes
-  loop: "{{ groups['workers'] }}"
-  loop_control:
-    loop_var: tester_item
-  register: result
-  failed_when: "result.rc != 0 and result.rc != 2"
+    loop_var: hitem
