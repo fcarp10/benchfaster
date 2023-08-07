@@ -1,3 +1,8 @@
+- name: Set toolkit directory
+  ansible.builtin.set_fact:
+    toolkit_dir: "{{ playbook_dir }}/deployment"
+    tests_dir: "{{ playbook_dir }}/benchmark"
+
 - name: Set group for workers
   add_host:
     name: "{{ node_item }}"
