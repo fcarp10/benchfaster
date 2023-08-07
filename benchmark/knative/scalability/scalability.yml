@@ -1,8 +1,8 @@
-- name: Initialize BenchFaster
-  ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/init.yml"
+- name: Start BenchFaster
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/start.yml"
   
 - name: Add local container registry
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/registry/registry_add.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/registry/registry_add.yml"
   
 - name: Install Knative
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/install.yml"
@@ -16,9 +16,5 @@
   loop_control:
     loop_var: sub_item
 
-- name: Copy results to control node
-  ansible.builtin.command: rsync -a "{{ ansible_user }}"@"{{ ansible_host }}":/home/"{{ ansible_user }}"/benchfaster/_results "{{ playbook_dir }}"/
-  delegate_to: 127.0.0.1
-
-- name: Delete BenchFaster
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/delete.yml"
+- name: Stop BenchFaster
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/stop.yml"

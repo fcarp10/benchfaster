@@ -3,10 +3,10 @@
 
 - name: Run sleep test with JMeter
   ansible.builtin.shell: |
-    jmeter -n -t /home/{{ ansible_user }}/benchfaster/benchmark/knative/sleep/sleep.jmx \
+    jmeter -n -t /tmp/benchfaster/sleep/sleep.jmx \
       -Jrequest.ip={{ functions_item }}.default.{{ address_benchmark }}.nip.io \
       -Jrequest.port={{ knative.port }} \
-      -Jtest.pathLoads=/home/{{ ansible_user }}/benchfaster/benchmark/knative/sleep/_data/lambda_{{ lambda_item }} \
+      -Jtest.pathLoads=/tmp/benchfaster/sleep/_data/lambda_{{ lambda_item }} \
       -Jtest.iterations={{ iterations }} \
       -Jrequest.sleep_time_f1=5 \
       -Jrequest.sleep_time_f2=10 \

@@ -1,5 +1,5 @@
 - name: Initialize BenchFaster
-  ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/init.yml"
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/start.yml"
   
 - name: Install OpenFaas
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"
@@ -19,4 +19,4 @@
     mode: pull
 
 - name: Delete BenchFaster
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/delete.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}deployment/core/stop.yml"

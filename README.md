@@ -136,7 +136,3 @@ Run a hello-world example with:
 ```shell
 ansible-playbook -i inventory/inventory_example.yml ${PLAYBOOK_FILE}.yml
 ```
-Optional variables (`-e "key=value"`):
-  - `hvm=true`: When using a hypervisor
-  - `repetitions=N`: Number of repetitions of a certain workflow
-

@@ -35,7 +35,7 @@
     - "hostvars[groups['headnodes'][0]].headnode is defined"
 
 - name: Deploy VMs
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/hvm.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/vagrant/hvm.yml"
   args:
     apply:
       delegate_to: "{{ current_hv }}"
@@ -57,7 +57,7 @@
     - "hostvars[headnode_item].headnode is defined"
 
 - name: Generate nebula certificates
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/nebula/nebula_certs.yml"
   args:
     apply:
       delegate_to: localhost
@@ -65,7 +65,7 @@
 
 - name: Copy nebula certificates to workers
   copy:
-    src: "{{ toolkit_dir }}/nebula"
+    src: "{{ toolkit_dir }}/core/nebula"
     dest: /tmp/benchfaster/
   delegate_to: "{{ current_host }}"
   loop: "{{ groups['workers'] }}"
@@ -74,7 +74,7 @@
 
 - name: Copy nebula certificates to headnode
   copy:
-    src: "{{ toolkit_dir }}/nebula"
+    src: "{{ toolkit_dir }}/core/nebula"
     dest: /tmp/benchfaster/
   delegate_to: "{{ current_host }}"
   loop: "{{ groups['headnodes'] }}"
@@ -91,25 +91,25 @@
     loop_var: current_host
 
 - name: Delete QoS from all nodes
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos_delete.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/qos_delete.yml"
   when: hvm is not defined
 
 #TODO: check which of these files are actually necessary to be copied
 - name: Install Nebula on headnode
-  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[groups['headnodes'][0]].arch }} lighthouse 127.0.0.99"
+  ansible.builtin.script: "{{ toolkit_dir }}/core/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[groups['headnodes'][0]].arch }} lighthouse 127.0.0.99"
   delegate_to: "{{ groups['headnodes'][0] }}"
 
 - name: Install Nebula on workers
-  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[current_host].arch }} {{ hostvars[current_host].inventory_hostname }} {{ headnodeip.stdout }}"
+  ansible.builtin.script: "{{ toolkit_dir }}/core/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[current_host].arch }} {{ hostvars[current_host].inventory_hostname }} {{ headnodeip.stdout }}"
   delegate_to: "{{ current_host }}"
   loop: "{{ groups['workers'] }}"
   loop_control:
     loop_var: current_host
 
 - name: Deploy k3s cluster
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/k3s/k3s_cluster.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/k3s/k3s_cluster.yml"
   when: hvm is not defined
 
 - name: Apply QoS to all nodes
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/qos.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/qos.yml"
   when: hvm is not defined

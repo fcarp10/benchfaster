@@ -1,5 +1,5 @@
 - name: Initialize BenchFaster
-  ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/init.yml"
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/start.yml"
 
 - name: Install RabbitMQ
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/rabbitmq/rabbitmq_install.yml"
@@ -23,4 +23,4 @@
     mode: pull
 
 - name: Delete BenchFaster
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/delete.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}deployment/core/stop.yml"
