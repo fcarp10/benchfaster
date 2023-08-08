@@ -11,3 +11,4 @@ ansible.log
 *.drawio.dtmp
 _data*
 *.swp
+*.py

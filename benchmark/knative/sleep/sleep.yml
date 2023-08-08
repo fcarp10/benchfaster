@@ -12,9 +12,9 @@
 
 - name: Run benchmark per lambda
   ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/knative/sleep/sub_item.yml"
-  with_sequence: 1-{{ num_lambdas }}
+  with_sequence: 1-{{ num_tests }}
   loop_control:
-    loop_var: lambda_item
+    loop_var: test_item
 
 - name: Stop BenchFaster
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/stop.yml"
