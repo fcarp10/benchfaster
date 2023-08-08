@@ -1,13 +1,18 @@
+- name: Set default root path for results when undefined
+  ansible.builtin.set_fact:
+    results_root: "{{ playbook_dir }}"
+  when: results_root is undefined
+
 - name: Copy results to control node
   ansible.builtin.synchronize:
     src: "{{ results_path.path }}"
-    dest: "{{ playbook_dir }}/_results/"
+    dest: "{{ results_root }}/_results/"
     mode: pull
 
 - name: Copy ansible logs to results folder
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/ansible.log"
-    dest: "{{ playbook_dir }}/_results/{{ foldername }}"
+    dest: "{{ results_root }}/_results/{{ foldername }}"
   delegate_to: localhost
 
 - name: Delete QoS from all nodes
