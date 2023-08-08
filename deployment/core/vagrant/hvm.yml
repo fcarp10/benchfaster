@@ -6,8 +6,8 @@
     src: "{{ toolkit_dir }}/{{ file }}"
     dest: /tmp/benchfaster/
   with_items:
-    - vagrant/Vagrantfile
-    - vagrant/environment.rb
+    - core/vagrant/Vagrantfile
+    - core/vagrant/environment.rb
   loop_control:
     loop_var: file
 
@@ -55,7 +55,7 @@
     line: '    $NUM_WORKERS = {{ hostvars[current_hv].num_workers }}'
 
 - name: destroy old Vagrant machines
-  ansible.builtin.script: "{{ toolkit_dir }}/vagrant/destroy_machines.sh /tmp/benchfaster"
+  ansible.builtin.script: "{{ toolkit_dir }}/core/vagrant/destroy_machines.sh /tmp/benchfaster"
 
 - name: start Vagrant machines
   shell:                                                                                                
@@ -96,7 +96,7 @@
     host_key_checking: False
 
 - name: Add VM workers to inventory
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/vagrant/add_workers.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/vagrant/add_workers.yml"
   loop: "{{ range(1, hostvars[current_hv].num_workers + 1, 1)|list }}"
   loop_control: 
     loop_var: vm_worker_index

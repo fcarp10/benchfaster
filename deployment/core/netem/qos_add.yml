@@ -10,7 +10,7 @@
       echo "Only delay and variance added!" >> {{ results_path.path }}/logs.txt
     fi
     if [ $(echo "{{ qos.delay }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ qos.variance }} != 0" | bc -l) -eq 0 ] && [ $(echo "{{ qos.loss }} != 0" | bc -l) -eq 0 ]; then
-      sudo tc qdisc add dev {{ hostvars[hitem].interface }} root netem delay {{ qos.delay }}ms
+      tc qdisc add dev {{ hostvars[hitem].interface }} root netem delay {{ qos.delay }}ms
       echo "Only delay added!"
     else
       echo "No QoS to apply"
