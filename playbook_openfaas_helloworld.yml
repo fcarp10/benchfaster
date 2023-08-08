@@ -49,13 +49,14 @@
       
   tasks:
 
-    - name: Initialize benchmark
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/init.yml"
+    - name: Start benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/start.yml"
     
     - name: Run OpenFaas helloworld test
       ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/openfaas/helloworld/helloworld_jmeter.yml"
       with_items:
         - "{{ netem }}"
 
-
+    - name: Stop benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/stop.yml"
 

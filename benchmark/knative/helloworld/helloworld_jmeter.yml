@@ -5,7 +5,7 @@
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/install.yml"
 
 - name: Install Knative functions
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/functions/install.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/fn-install.yml"
 
 - name: Copy benchmark folder to tester node
   ansible.builtin.synchronize:

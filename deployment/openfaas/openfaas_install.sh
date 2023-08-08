@@ -4,12 +4,12 @@ functions_deploy() {
     TOOLKITPATH=$2
 	for funct in $1
 	do
-		echo "Deploying $funct from ${REPOSITORY}$(cat $TOOLKITPATH/functions/${funct}.yml | grep image | awk '{print $2}')"
-		faas-cli deploy --image=${REPOSITORY}/$(cat $TOOLKITPATH/functions/${funct}.yml | grep image | awk '{print $2}') -f $TOOLKITPATH/functions/${funct}.yml
+		echo "Deploying $funct from ${REPOSITORY}$(cat $TOOLKITPATH/openfaas-fn/${funct}.yml | grep image | awk '{print $2}')"
+		faas-cli deploy --image=${REPOSITORY}/$(cat $TOOLKITPATH/openfaas-fn/${funct}.yml | grep image | awk '{print $2}') -f $TOOLKITPATH/openfaas-fn/${funct}.yml
 			sleep 2
-			if [ -f $TOOLKITPATH/functions/${funct}-hpa.yml ]
+			if [ -f $TOOLKITPATH/openfaas-fn/${funct}-hpa.yml ]
 			then
-					kubectl apply -f $TOOLKITPATH/functions/${funct}-hpa.yml
+					kubectl apply -f $TOOLKITPATH/openfaas-fn/${funct}-hpa.yml
 			if [ $? -ne 0 ]; then echo "There was an error while deploying $funct. Aborting..." \
 			&& exit 2; fi
 					sleep 2
@@ -62,7 +62,7 @@ do
 done
 curl -sSLf https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 \
     | bash
-kubectl apply -f $TOOLKITPATH/namespaces.yml
+kubectl apply -f $TOOLKITPATH/openfaas-ns.yml
 #Apply the changed defaults to openfaas namespace (and thus to all core components)
 kubectl apply -f $TOOLKITPATH/memory-defaults.yaml --namespace=openfaas
 #Apply the changed defaults to function namespace (and thus to all deployed containers)

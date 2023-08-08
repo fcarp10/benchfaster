@@ -1,6 +1,6 @@
 - name: Install Knative function
   ansible.builtin.shell: |
-    sudo -E kubectl apply -f /home/{{ ansible_user }}/benchfaster/deployment/core/knative/functions/{{ functions_item }}.yaml
+    sudo -E kubectl apply -f /tmp/benchfaster/payload/knative-fn/{{ functions_item }}.yaml
     sleep 5
     sudo -E kubectl -n default rollout status deploy/{{ functions_item }}-00001-deployment --timeout=60s
     sleep 5

@@ -1,7 +1,7 @@
 __pycache__
 jmeter.log
-_results/
-_plots/
+_results*
+_plots*
 cert/
 .vscode/
 inventory/

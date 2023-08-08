@@ -13,4 +13,4 @@ spec:
       containers:
         - image: fcarp10/hello-world:latest
           ports:
-            - containerPort: 8082
+            - containerPort: 80

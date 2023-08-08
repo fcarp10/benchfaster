@@ -48,8 +48,8 @@
       
   tasks:
 
-    - name: Initialize benchmark
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/init.yml"
+    - name: Start benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/start.yml"
 
     - name: Run Mosquitto helloworld test
       ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/mosquitto/helloworld/helloworld_mqtt-stresser.yml"
@@ -59,4 +59,5 @@
       loop_control:
         loop_var: pb_item
 
-
+    - name: Stop benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/stop.yml"

@@ -26,30 +26,12 @@
         tm:   
           delay: 0   
           variance: 0    
-          loss: 0  
-      - name: qos-tester
-        intra: 
-          delay: 0
-          variance: 0
           loss: 0
-        tm:   
-          delay: 12.5      
-          variance: 2.5   
-          loss: 0.2
-      - name: qos-intra-tester
-        intra: 
-          delay: 1.25
-          variance: 0.25
-          loss: 0.02
-        tm: 
-          delay: 1.25
-          variance: 0.25
-          loss: 0.02
       
   tasks:
 
-    - name: Initialize benchmark
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/init.yml"
+    - name: Start benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/start.yml"
          
     - name: Run Knative helloworld test
       ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/knative/helloworld/helloworld_jmeter.yml"
@@ -63,5 +45,7 @@
       loop_control:
         loop_var: pb_item
 
+    - name: Stop benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/stop.yml"
 
 

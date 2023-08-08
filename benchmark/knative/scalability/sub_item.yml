@@ -1,5 +1,5 @@
 - name: Install Knative functions
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/functions/install.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/fn-install.yml"
 
 - name: Run scalability test with Hey
   ansible.builtin.shell: |
@@ -8,4 +8,4 @@
     >> {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ groups['workers'] | length }}_Q-{{ qos_item }}_T-{{ num_threads_item }}_L-{{ loads_item }}.txt
 
 - name: Delete Knative functions
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/functions/delete.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/fn-delete.yml"

@@ -1,5 +1,5 @@
 - name: Install Knative functions
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/functions/install.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/fn-install.yml"
 
 - name: Run sleep test with JMeter
   ansible.builtin.shell: |
@@ -16,4 +16,4 @@
       -l {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ groups['workers'] | length }}_Q-{{ item.name }}_L-{{ lambda_item }}.csv
 
 - name: Delete Knative functions
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/functions/delete.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/fn-delete.yml"
