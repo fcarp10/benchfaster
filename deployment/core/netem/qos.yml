@@ -1,0 +1,32 @@
+- ansible.builtin.set_fact:
+    qos: "{{ item.intra }}"
+
+- name: Apply QoS set "{{ item.name }}" (Machines)
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/qos_add.yml"
+  args:
+    apply:
+      delegate_to: "{{ hitem }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: hitem
+
+- name: Apply QoS set "{{ item.name }}" (Headnode)
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/qos_add.yml"
+  args:
+    apply:
+      delegate_to: "{{ hitem }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: hitem
+
+- ansible.builtin.set_fact:
+    qos: "{{ item.tm }}"
+
+- name: Apply QoS set "{{ item.name }}" (Testers)
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/qos_add.yml"
+  args:
+    apply:
+      delegate_to: "{{ hitem }}"
+  loop: "{{ groups['testers'] }}"
+  loop_control:
+    loop_var: hitem

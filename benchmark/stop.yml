@@ -1,0 +1,5 @@
+- name: Remove ansible logs from current dir
+  file:
+    path: "{{ playbook_dir }}/ansible.log"
+    state: absent
+  delegate_to: localhost

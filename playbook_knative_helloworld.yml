@@ -1,6 +1,5 @@
 - hosts: testers
   vars:
-    num_workers: 1
     nebula: 
       nebula_version: 1.5.2
       nebula_address: lighthouse
@@ -11,7 +10,8 @@
     knative:
       version: v1.10.0
       port: 80
-      functions: fib-kn
+      functions: 
+        - hello-world
     registry:
       reg_user:
       reg_ip: 
@@ -26,36 +26,26 @@
         tm:   
           delay: 0   
           variance: 0    
-          loss: 0  
-      - name: qos-tester
-        intra: 
-          delay: 0
-          variance: 0
           loss: 0
-        tm:   
-          delay: 12.5      
-          variance: 2.5   
-          loss: 0.2
-      - name: qos-intra-tester
-        intra: 
-          delay: 1.25
-          variance: 0.25
-          loss: 0.02
-        tm: 
-          delay: 1.25
-          variance: 0.25
-          loss: 0.02
       
   tasks:
 
-    - name: Set results directory
-      ansible.builtin.set_fact:
-        foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
-    
+    - name: Start benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/start.yml"
+         
     - name: Run Knative helloworld test
       ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/knative/helloworld/helloworld_jmeter.yml"
-      with_items:
-        - "{{ netem }}"
+      vars:
+        - item: "{{ pb_item.0 }}"
+        - qos_item: "{{ pb_item.0.name }}"
+        - functions_item: "{{ pb_item.1 }}"
+        - num_iterations: 100
+        - load: 1
+      loop: "{{ netem |  product(knative.functions)  | list }}"
+      loop_control:
+        loop_var: pb_item
 
+    - name: Stop benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/stop.yml"
 
 

@@ -1,0 +1,17 @@
+#TODO: replace with ansible commands
+- name: Add local container registry to all machines
+  ansible.builtin.shell: |
+    sudo sed -i '/{{ registry.reg_dname }}/d' /etc/hosts
+    cat << EOF | sudo tee /etc/rancher/k3s/registries.yaml > /dev/null
+    mirrors:
+      "{{ registry.reg_dname }}:{{ registry.reg_port }}":
+        endpoint:
+          - "http://{{ registry.reg_dname }}:{{ registry.reg_port }}"
+    EOF
+    echo '{{ registry.reg_ip }} {{ registry.reg_dname }}' | tee -a /etc/hosts
+    systemctl restart k3s*
+  become: yes
+  delegate_to: "{{ hitem }}"
+  loop: "{{ groups['all'] }}"
+  loop_control:
+    loop_var: hitem

@@ -1,0 +1,9 @@
+- name: Delete QoS
+  ansible.builtin.command: tc qdisc delete dev "{{ hostvars[hitem].interface }}" root
+  become: yes
+  register: cmd_res
+  failed_when: cmd_res.rc != 0 and cmd_res.rc != 2
+  delegate_to: "{{ hitem }}"
+  loop: "{{ groups['all'] }}"
+  loop_control:
+    loop_var: hitem

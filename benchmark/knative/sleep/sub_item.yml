@@ -1,0 +1,19 @@
+- name: Install Knative functions
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/fn-install.yml"
+
+- name: Run sleep test with JMeter
+  ansible.builtin.shell: |
+    jmeter -n -t /tmp/benchfaster/sleep/sleep.jmx \
+      -Jrequest.ip={{ functions_item }}.default.{{ address_benchmark }}.nip.io \
+      -Jrequest.port={{ knative.port }} \
+      -Jtest.pathLoads=/tmp/benchfaster/sleep/_data/lambda_{{ lambda_item }} \
+      -Jtest.iterations={{ iterations }} \
+      -Jrequest.sleep_time_f1=5 \
+      -Jrequest.sleep_time_f2=10 \
+      -Jrequest.sleep_time_f3=20 \
+      -Jrequest.sleep_time_f4=50 \
+      -Jrequest.sleep_time_f5=100 \
+      -l {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ groups['workers'] | length }}_Q-{{ item.name }}_L-{{ lambda_item }}.csv
+
+- name: Delete Knative functions
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/fn-delete.yml"

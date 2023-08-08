@@ -1,11 +1,6 @@
 - name: OpenFaaS helloworld playbook
   hosts: testers
   vars:
-    num_workers: 4
-    vagrant:
-      vm_cpu: 2
-      vm_mem: 4096
-      vm_image: "generic/ubuntu2004"
     nebula: 
       nebula_version: 1.5.2
       nebula_address: lighthouse
@@ -54,14 +49,14 @@
       
   tasks:
 
-    - name: Set results directory
-      ansible.builtin.set_fact:
-        foldername: "{{ lookup('pipe', 'date +%Y-%-m-%-d_%H-%M-%S') }}"
+    - name: Start benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/start.yml"
     
     - name: Run OpenFaas helloworld test
       ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/openfaas/helloworld/helloworld_jmeter.yml"
       with_items:
         - "{{ netem }}"
 
-
+    - name: Stop benchmark
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/benchmark/stop.yml"
 

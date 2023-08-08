@@ -1,0 +1,16 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: hello-world
+  namespace: default
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/class: "kpa.autoscaling.knative.dev"
+    spec:
+      containerConcurrency: 1
+      containers:
+        - image: fcarp10/hello-world:latest
+          ports:
+            - containerPort: 80

@@ -1,21 +1,26 @@
-- name: Initialize BenchFaster
-  ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/init.yml"
+- name: Start BenchFaster
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/start.yml"
   
 - name: Install Knative
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/install.yml"
 
+- name: Install Knative functions
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/fn-install.yml"
+
+- name: Copy benchmark folder to tester node
+  ansible.builtin.synchronize:
+    src: "{{ playbook_dir }}/benchmark/knative/helloworld"
+    dest: /tmp/benchfaster/
+    mode: push
+
 - name: Run helloworld test with JMeter
   ansible.builtin.shell: |
-    jmeter -n -t {{ tests_dir }}/knative/helloworld/helloworld.jmx \ 
-      -Jrequest.ip=fib-kn.default.{{ address_benchmark }}.nip.io \
+    jmeter -n -t /tmp/benchfaster/helloworld/helloworld.jmx \ 
+      -Jrequest.ip={{ functions_item }}.default.{{ address_benchmark }}.nip.io \
       -Jrequest.port={{ knative.port }} \
-      -Jtest.iterations=100 \
-      -Jtest.argument=1 \
-      -l {{ results_path.path }}/scalability-knative_W-{{ num_workers }}_Q-{{ item.name }}.csv
+      -Jtest.iterations={{ num_iterations }} \
+      -Jtest.argument={{ load }} \
+      -l {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ groups['workers'] | length }}_Q-{{ item.name }}.csv
 
-- name: Copy results to control node
-  ansible.builtin.command: rsync -a "{{ ansible_user }}"@"{{ ansible_host }}":/home/"{{ ansible_user }}"/benchfaster/_results "{{ playbook_dir }}"/
-  delegate_to: 127.0.0.1
-
-- name: Delete BenchFaster
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/delete.yml"
+- name: Stop BenchFaster
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/stop.yml"

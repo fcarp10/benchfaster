@@ -16,4 +16,4 @@
       - fcarp10/fib-go
       - fcarp10/fib-kn
   tasks:
-    - ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/registry/registry_deploy.yml"
+    - ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/registry/registry_deploy.yml"
