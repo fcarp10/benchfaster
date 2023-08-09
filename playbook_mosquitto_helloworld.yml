@@ -17,6 +17,7 @@
     mosquitto:
       mosquitto_version: 1.6.15
       mosquitto_port: 31883
+      max_replicas: 5
     netem:
       - name: qos-empty
         intra: 

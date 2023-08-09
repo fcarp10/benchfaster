@@ -17,6 +17,7 @@
     rabbitmq:
       rabbitmq_version: 1.6.15
       rabbitmq_port: 30672
+      max_replicas: 5
     netem:
       - name: qos-empty
         intra: 

@@ -11,3 +11,4 @@ sudo -E kubectl apply -f ${PAYLOAD_DIR}/memory-defaults.yaml --namespace=mosquit
 sudo -E kubectl apply -f ${PAYLOAD_DIR}/mosquitto.yaml
 sudo -E kubectl apply -f ${PAYLOAD_DIR}/mosquitto-svc.yaml
 sudo -E kubectl -n mosquitto rollout status -w deployment/mosquitto
+sudo -E kubectl autoscale deployment mosquitto -n mosquitto --cpu-percent=50 --min=1 --max=$1

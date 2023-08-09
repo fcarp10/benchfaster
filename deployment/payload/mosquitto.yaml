@@ -7,7 +7,6 @@
    selector:
       matchLabels:
          run: mosquitto
-   replicas: 1
    template:
       metadata:
          labels:
@@ -18,3 +17,8 @@
            image: eclipse-mosquitto:1.6.15
            ports:
            - containerPort: 1883
+           resources:
+             limits:
+               cpu: 500m
+             requests:
+               cpu: 200m
