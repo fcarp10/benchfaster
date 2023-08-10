@@ -14,6 +14,8 @@
       - nats-streaming:0.25.5
       - fcarp10/hello-world
       - fcarp10/fib-go
-      - fcarp10/fib-kn
+      - fcarp10/fib-fn
+      - fcarp10/sleep-fn
+      - fcarp10/sleep
   tasks:
     - ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/registry/registry_deploy.yml"
