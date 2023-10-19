@@ -14,6 +14,7 @@
     src: "{{ playbook_dir }}/ansible.log"
     dest: "{{ results_root }}/_results/{{ foldername }}"
   delegate_to: localhost
+  ignore_errors: true
 
 - name: Delete QoS from all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/qos_delete.yml"
