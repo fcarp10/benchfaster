@@ -3,7 +3,7 @@
       machine \
       {{ knative.version }} \
       {{ address_benchmark }} \
-      {{ registry.reg_dname }} \
-      {{ registry.reg_port }}"
+      {{ registry.dname }} \
+      {{ registry.port }}"
   become: yes
   delegate_to: "{{ groups['headnodes'][0] }}"

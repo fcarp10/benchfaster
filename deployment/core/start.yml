@@ -90,8 +90,8 @@
   loop_control:
     loop_var: current_host
 
-- name: Delete QoS from all nodes
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/qos_delete.yml"
+- name: Delete netem from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/netem_delete.yml"
   when: hvm is not defined
 
 #TODO: check which of these files are actually necessary to be copied
@@ -110,6 +110,6 @@
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/k3s/k3s_cluster.yml"
   when: hvm is not defined
 
-- name: Apply QoS to all nodes
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/qos.yml"
+- name: Apply netem to all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/netem.yml"
   when: hvm is not defined

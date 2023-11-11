@@ -1,0 +1,4 @@
+---
+# tasks file for roles/applications/openfaas
+- name: Install OpenFaas
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"

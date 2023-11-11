@@ -1,0 +1,29 @@
+- name: Delete netem from Headnodes
+  ansible.builtin.command: tc qdisc delete dev "{{ hostvars[hitem].interface }}" root
+  become: yes
+  register: cmd_res
+  failed_when: cmd_res.rc != 0 and cmd_res.rc != 2
+  delegate_to: "{{ hitem }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: hitem
+
+- name: Delete netem from Workers
+  ansible.builtin.command: tc qdisc delete dev "{{ hostvars[hitem].interface }}" root
+  become: yes
+  register: cmd_res
+  failed_when: cmd_res.rc != 0 and cmd_res.rc != 2
+  delegate_to: "{{ hitem }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: hitem
+
+- name: Delete netem from Testers
+  ansible.builtin.command: tc qdisc delete dev "{{ hostvars[hitem].interface }}" root
+  become: yes
+  register: cmd_res
+  failed_when: cmd_res.rc != 0 and cmd_res.rc != 2
+  delegate_to: "{{ hitem }}"
+  loop: "{{ groups['testers'] }}"
+  loop_control:
+    loop_var: hitem

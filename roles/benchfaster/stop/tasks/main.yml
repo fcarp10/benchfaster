@@ -1,0 +1,25 @@
+---
+# tasks file for roles/benchfaster/finish
+- name: Set default root path for results when undefined
+  ansible.builtin.set_fact:
+    results_root: "{{ playbook_dir }}"
+  when: results_root is undefined
+
+- name: Copy results to control node
+  ansible.builtin.synchronize:
+    src: "{{ results_path.path }}"
+    dest: "{{ results_root }}/_results/"
+    mode: pull
+
+- name: Copy ansible logs to results folder
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/ansible.log"
+    dest: "{{ results_root }}/_results/{{ foldername }}"
+  delegate_to: localhost
+  ignore_errors: true
+
+- name: Delete netem from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/netem_delete.yml"
+  when: hvm is not defined
+
+# -name: Uninstall K3s (TO-DO)

@@ -1,0 +1,26 @@
+- name: Hello-world playbook example for openfaas and jmeter
+  hosts: testers
+  vars:
+    num_iterations: 10
+    jmeter_file: hello-world
+    function: 
+      name: hello-world
+      url: "{{ address_benchmark }}"
+      port: 31112
+      path: /function/hello-world
+    registry: 
+      user: ubuntu
+      ip: 192.168.100.247
+      port: 5000
+      dname: local-registry
+      
+  tasks:
+
+    - ansible.builtin.include_role: 
+        name: benchfaster/init
+
+    - name: Launch knative workflow
+      ansible.builtin.import_tasks: workflows/openfaas_jmeter.yml
+    
+    - ansible.builtin.include_role: 
+        name: benchfaster/finish

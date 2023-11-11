@@ -16,8 +16,8 @@
   delegate_to: localhost
   ignore_errors: true
 
-- name: Delete QoS from all nodes
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/qos_delete.yml"
+- name: Delete netem from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/netem_delete.yml"
   when: hvm is not defined
 
 # -name: Uninstall K3s (TO-DO)

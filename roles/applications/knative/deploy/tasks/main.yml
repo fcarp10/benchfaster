@@ -1,0 +1,4 @@
+---
+# tasks file for roles/applications/knative/knative-main
+- name: Install Knative
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/install.yml"

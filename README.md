@@ -78,41 +78,6 @@ Testers:
 - `address_benchmark`: Name of the host where to run the benchmarks against
 </details>
 
-<details>
-<summary><b>Playbook</b></summary>
-
-Playbooks define the following variables:
-
-**Required**
-
-- `num_workers`: Number of workers in the cluster 
-- `nebula.nebula_version`: Nebula version
-- `nebula.nebula_address`: Nebula address
-- `nebula.nebula_port`: Nebula port
-- `k3s.k3s_version`: K3s version
-- `k3s.k3s_port`: K3s port
-- `netem.intra.delay`: Intra node delay in ms
-- `netem.intra.variance`: Intra node delay variance in ms
-- `netem.intra.loss`: Intra node loss probability in %
-- `netem.tm.delay`: From tester to head node delay in ms
-- `netem.tm.variance`: From tester to head node variance in ms
-- `netem.tm.loss`: From tester to head node loss probability in %
-
-**Optional**
-
-- `knative.version`: Knative version
-- `knative.port`: Knative port 
-- `knative.functions`: Knative functions
-- `openfaas.openfaas_version`: OpenFaaS version
-- `openfaas.openfaas_port`: OpenFaaS port 
-- `openfaas.openfaas_namespace`: OpenFaaS namespace for functions
-- `openfaas.openfaas_functions`: List of OpenFaaS functions to deploy
-- `vagrant.vm_cpu`: Number of CPUs units per VM (required only in hypervisor mode)
-- `vagrant.vm_mem`: Amount of RAM per VM (required only in hypervisor mode)
-- `vagrant.vm_image`: Name of the Vagrant box (required only in hypervisor mode)
-
-</details>
-
 ## Install Requirements
 
 Install the requirements for each type of node with:
@@ -126,7 +91,7 @@ where `REQ_FILE` is either `machine`, `tester` or `hypervisor`.
 
 Deploy local container registry on the tester node:
 ```shell
-ansible-playbook -i inventory/inventory_example.yml playbook_registry.yml
+ansible-playbook -i inventory/inventory_example.yml local_registry.yml
 ```
 
 ## Run hello-world test

@@ -1,0 +1,13 @@
+---
+# tasks file for roles/benchmark/stop
+- name: Remove ansible logs from current dir
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/ansible.log"
+    state: absent
+  delegate_to: localhost
+
+- name: Remove results directory from testers
+  ansible.builtin.file:
+    path: "/tmp/benchfaster/_results/{{ foldername }}"
+    state: absent
+  register: results_path

@@ -1,30 +1,30 @@
 #TODO: migrate this to a proper host description
 - name: Remove old local container registry
   ansible.builtin.shell: |
-    ssh -n {{ reg_user }}@{{ reg_ip }} "docker container stop registry && docker container rm -v registry"
-    ssh -n {{ reg_user }}@{{ reg_ip }} "sudo sed -i '/{{ reg_dname }}/d' /etc/hosts"
-    ssh -n {{ reg_user }}@{{ reg_ip }} "echo '{{ reg_ip }} {{ reg_dname }}' | sudo tee -a /etc/hosts"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "docker container stop registry && docker container rm -v registry"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "sudo sed -i '/{{ registry.dname }}/d' /etc/hosts"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "echo '{{ registry.ip }} {{ registry.dname }}' | sudo tee -a /etc/hosts"
   ignore_errors: True
 
 - name: Add insecure registry to docker
   ansible.builtin.shell: |
-    ssh -n {{ reg_user }}@{{ reg_ip }} "sudo rm /etc/docker/daemon.json"
-    ssh -n {{ reg_user }}@{{ reg_ip }} "sudo mkdir -p /etc/docker"
-    ssh -n {{ reg_user }}@{{ reg_ip }} "cat << EOF | sudo tee /etc/docker/daemon.json > /dev/null
+    ssh -n {{ registry.user }}@{{ registry.ip }} "sudo rm /etc/docker/daemon.json"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "sudo mkdir -p /etc/docker"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "cat << EOF | sudo tee /etc/docker/daemon.json > /dev/null
     {
-      \"insecure-registries\": [\"{{ reg_dname }}:{{ reg_port }}\"]
+      \"insecure-registries\": [\"{{ registry.dname }}:{{ registry.port }}\"]
     }
     EOF"
-    ssh -n {{ reg_user }}@{{ reg_ip }} "sudo systemctl restart docker"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "sudo systemctl restart docker"
 
 - name: Deploy local container registry
   ansible.builtin.shell: |
-    ssh -n {{ reg_user }}@{{ reg_ip }} "docker run -d -p {{ reg_port }}:5000 --restart=always --name registry registry:2"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "docker run -d -p {{ registry.port }}:5000 --restart=always --name registry registry:2"
 
 - name: Pull container images and push to local registry 
   ansible.builtin.shell: |
-    ssh -n {{ reg_user }}@{{ reg_ip }} "docker pull {{ item }}"
-    ssh -n {{ reg_user }}@{{ reg_ip }} "docker tag {{ item }} {{ reg_dname }}:{{ reg_port }}/{{ item }}"
-    ssh -n {{ reg_user }}@{{ reg_ip }} "docker push {{ reg_dname }}:{{ reg_port }}/{{ item }}"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "docker pull {{ item }}"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "docker tag {{ item }} {{ registry.dname }}:{{ registry.port }}/{{ item }}"
+    ssh -n {{ registry.user }}@{{ registry.ip }} "docker push {{ registry.dname }}:{{ registry.port }}/{{ item }}"
   with_items:
     - "{{ container_images }}"

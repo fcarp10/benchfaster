@@ -1,0 +1,10 @@
+---
+# vars file for roles/applications/knative-main
+knative:
+  version: v1.10.0
+  port: 80
+registry:
+  user:
+  ip: 
+  port:
+  dname:

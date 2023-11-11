@@ -1,0 +1,22 @@
+- name: Deploy local container registry
+  hosts: testers
+  vars:
+    registry: 
+      user: ubuntu
+      ip: 192.168.1.247
+      port: 5000
+      dname: local-registry
+    container_images:
+      - michalkeit/faas-netes:0.13.2
+      - ghcr.io/openfaas/gateway:0.27.0
+      - ghcr.io/openfaas/queue-worker:0.14.0
+      - prom/prometheus:v2.46.0
+      - prom/alertmanager:v0.25.0
+      - nats-streaming:0.25.5
+      - fcarp10/hello-world
+      - fcarp10/fib-go
+      - fcarp10/fib-fn
+      - fcarp10/sleep-fn
+      - fcarp10/sleep
+  tasks:
+    - ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/registry/registry_deploy.yml"

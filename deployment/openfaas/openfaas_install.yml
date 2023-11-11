@@ -4,9 +4,9 @@
       {{ openfaas.openfaas_port }} \
       {{ openfaas.openfaas_version }} \
       {{ openfaas.openfaas_namespace }} \
-      {{ openfaas.openfaas_functions }} \
+      {{ function.name }} \
       false \
-      {{ registry.reg_dname }} \
-      {{ registry.reg_port }}"
+      {{ registry.dname }} \
+      {{ registry.port }}"
   become: yes
   delegate_to: "{{ groups['headnodes'][0] }}"

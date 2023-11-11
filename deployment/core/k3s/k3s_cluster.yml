@@ -73,10 +73,6 @@
   register: k3s_token
   delegate_to: "{{ groups['headnodes'][0] }}"
 
-- name: Print the k3s token stdout
-  ansible.builtin.debug:
-    msg: "K3s token: {{ k3s_token.stdout }}"
-
 - name: Configure k3s agent setting token
   ansible.builtin.lineinfile:
     path: /tmp/k3s/config.yaml

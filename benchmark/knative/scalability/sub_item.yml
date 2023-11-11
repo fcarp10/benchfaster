@@ -5,7 +5,7 @@
   ansible.builtin.shell: |
     hey -c {{ num_threads_item }} -z {{ duration }} -d "{{ loads_item }}" \
       "http://{{ functions_item }}.default.{{ address_benchmark }}.nip.io:{{ knative.port }}" \
-    >> {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ groups['workers'] | length }}_Q-{{ qos_item }}_T-{{ num_threads_item }}_L-{{ loads_item }}.txt
+    >> {{ results_path.path }}/scalability-{{ functions_item }}_W-{{ groups['workers'] | length }}_Q-{{ netem.name }}_T-{{ num_threads_item }}_L-{{ loads_item }}.txt
 
 - name: Delete Knative functions
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/knative/fn-delete.yml"
