@@ -1,5 +1,5 @@
 ---
 # tasks file for roles/applications/mosquitto
 - name: Install Mosquitto
-  ansible.builtin.script: "{{ toolkit_dir }}/mosquitto/mosquitto_install.sh {{ mosquitto.max_replicas }}"
+  ansible.builtin.script: "mosquitto_install.sh {{ mosquitto.max_replicas }}"
   delegate_to: "{{ groups['headnodes'][0] }}"

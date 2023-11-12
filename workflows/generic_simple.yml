@@ -2,8 +2,8 @@
     name: "{{ role_item }}"
   with_items:
     - benchfaster/start
-    - applications/openfaas
-    - benchmark-tools/jmeter
+    - applications/{{ application }}
+    - benchmark-tools/{{ benchmark_tool }}
     - benchfaster/stop
   loop_control:
     loop_var: role_item

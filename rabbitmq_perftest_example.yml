@@ -1,0 +1,30 @@
+- name: Playbook example for rabbitmq and perf-test
+  hosts: testers
+  vars:
+    application: rabbitmq
+    benchmark_tool: perftest
+    perf_test:
+      url: "{{ address_benchmark }}"
+      port: 30672
+      producers: [1, 10]
+      consumers: [1, 10]
+      queue: "test-queue"
+      id: "test-id"
+      time: 1
+
+      
+  tasks:
+    - ansible.builtin.include_role: 
+        name: benchfaster/init
+
+    - name: Launch rabbitmq/perf-test workflow
+      ansible.builtin.include_tasks: workflows/generic_simple.yml
+      with_together:
+        - "{{ perf_test.producers }}"
+        - "{{ perf_test.consumers }}"
+      loop_control:
+        loop_var: num_clients_item
+    
+    - ansible.builtin.include_role: 
+        name: benchfaster/finish
+

@@ -8,7 +8,7 @@
 
 - name: Run JMeter test
   ansible.builtin.shell: |
-    jmeter -n -t /tmp/benchfaster/{{ jmeter.file }}.jmx \ 
+    jmeter -n -t /tmp/benchfaster/{{ jmeter.file }} \ 
       -Jrequest.ip={{ jmeter.url }} \
       -Jrequest.port={{ jmeter.port }} \
       -Jrequest.path={{ jmeter.path }} \

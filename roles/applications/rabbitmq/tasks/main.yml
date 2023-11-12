@@ -1,0 +1,5 @@
+---
+# tasks file for roles/applications/rabbitmq
+- name: Install RabbitMQ
+  ansible.builtin.script: "rabbitmq_install.sh {{ rabbitmq.max_replicas }}"
+  delegate_to: "{{ groups['headnodes'][0] }}"

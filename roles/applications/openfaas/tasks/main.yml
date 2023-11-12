@@ -1,4 +1,14 @@
 ---
 # tasks file for roles/applications/openfaas
 - name: Install OpenFaas
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/openfaas/openfaas_install.yml"
+  ansible.builtin.script: "openfaas_install.sh \
+      machine \
+      {{ openfaas.openfaas_port }} \
+      {{ openfaas.openfaas_version }} \
+      {{ openfaas.openfaas_namespace }} \
+      {{ function.name }} \
+      false \
+      {{ registry.dname }} \
+      {{ registry.port }}"
+  become: yes
+  delegate_to: "{{ groups['headnodes'][0] }}"

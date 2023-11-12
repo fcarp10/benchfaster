@@ -1,0 +1,22 @@
+---
+# tasks file for roles/benchmark-tools/perftest
+
+- ansible.builtin.set_fact:
+    perf_test: "{{perf_test | combine({'producers': num_clients_item.0})}}"
+  when: num_clients_item is defined
+
+- ansible.builtin.set_fact:
+    perf_test: "{{perf_test | combine({'consumers': num_clients_item.1})}}"
+  when: num_clients_item is defined
+
+- name: Run perf-test test
+  ansible.builtin.shell: |
+    docker run -it --rm pivotalrabbitmq/perf-test:latest \
+      --uri amqp://{{ perf_test.url }}:{{ perf_test.port }} \
+      --producers {{ perf_test.producers }} \
+      --consumers {{ perf_test.consumers }} \
+      --queue {{ perf_test.queue }} \
+      --autoack \
+      --id {{ perf_test.id }} \
+      --time {{ perf_test.time }} \
+    >> {{ results_path.path }}/amqp_W-{{ groups['workers'] | length }}_Q-{{ netem.name }}_P-{{ perf_test.producers }}_C-{{ perf_test.consumers }}.txt

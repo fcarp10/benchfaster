@@ -5,7 +5,7 @@
       url: "hello-world.default.{{ address_benchmark }}.nip.io"
       port: 80
       path: /
-      file: hello-world
+      file: hello-world.jmx
       iterations: 10
     function: 
       name: hello-world

@@ -1,13 +1,13 @@
-- name: Hello-world playbook example for openfaas and jmeter
+- name: Hello-world playbook example for openfaas and k6
   hosts: testers
   vars:
     application: openfaas
-    benchmark_tool: jmeter
-    jmeter: 
+    benchmark_tool: k6
+    k6: 
       url: "{{ address_benchmark }}"
       port: 31112
       path: /function/hello-world
-      file: hello-world.jmx
+      file: hello-world.js
       iterations: 10
     function: 
       name: hello-world
@@ -21,7 +21,7 @@
     - ansible.builtin.include_role: 
         name: benchfaster/init
 
-    - name: Launch openfaas/jmeter workflow
+    - name: Launch openfaas/k6 workflow
       ansible.builtin.import_tasks: workflows/generic_simple.yml
     
     - ansible.builtin.include_role: 

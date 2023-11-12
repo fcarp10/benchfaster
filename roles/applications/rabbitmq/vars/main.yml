@@ -1,0 +1,6 @@
+---
+# vars file for roles/applications/rabbitmq
+rabbitmq:
+  version: 1.6.15
+  port: 30672
+  max_replicas: 1

@@ -1,3 +1,0 @@
-- name: Install RabbitMQ
-  ansible.builtin.script: "{{ toolkit_dir }}/rabbitmq/rabbitmq_install.sh {{ rabbitmq.max_replicas }}"
-  delegate_to: "{{ groups['headnodes'][0] }}"
