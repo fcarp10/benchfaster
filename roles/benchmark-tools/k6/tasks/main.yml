@@ -1,0 +1,15 @@
+---
+# tasks file for roles/benchmark-tools/k6
+- name: Copy .js files to tester node
+  ansible.builtin.synchronize:
+    src: "{{ playbook_dir }}/roles/benchmark-tools/k6/files/"
+    dest: /tmp/benchfaster/
+    mode: push
+
+- name: Run K6 test
+  ansible.builtin.shell: |
+    k6 run /tmp/benchfaster/{{ k6.file }}.js \
+      -e host={{ k6.url }} \
+      -e port={{ k6.port }} \
+      --iterations {{ k6.iterations }} \
+      -o csv={{ results_path.path }}/k6_W{{ groups['workers'] | length }}_Q-{{ netem.name }}.csv

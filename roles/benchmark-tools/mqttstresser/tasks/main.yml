@@ -1,0 +1,19 @@
+---
+# tasks file for roles/benchmark-tools/mqttstresser
+
+- ansible.builtin.set_fact:
+    mqtt_stresser: "{{mqtt_stresser | combine({'num_clients': num_clients_item})}}"
+  when: num_clients_item is defined
+
+- name: Run mqtt-stresser test
+  ansible.builtin.shell: |
+    docker run --rm inovex/mqtt-stresser \
+      -broker tcp://{{ mqtt_stresser.url }}:{{ mqtt_stresser.port }} \
+      -num-clients {{ mqtt_stresser.num_clients }} \
+      -num-messages {{ mqtt_stresser.num_messages }} \
+      -rampup-delay {{ mqtt_stresser.rampup_delay }} \
+      -rampup-size {{ mqtt_stresser.rampup_size }} \
+      -global-timeout {{ mqtt_stresser.global_timeout }} \
+      -timeout {{ mqtt_stresser.timeout }} \
+      -no-progress \
+    >> {{ results_path.path }}/mqtt_W-{{ groups['workers'] | length }}_Q-{{ netem.name }}_T-{{ mqtt_stresser.num_clients }}.txt

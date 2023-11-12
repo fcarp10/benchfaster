@@ -1,0 +1,26 @@
+- name: Hello-world playbook example for mosquitto and mqtt-stresser
+  hosts: testers
+  vars:
+    mqtt_stresser:
+      url: "{{ address_benchmark }}"
+      port: 31883
+      num_clients: [1, 10]
+      num_messages: 150
+      rampup_delay: 1s
+      rampup_size: 10 
+      global_timeout: 180s
+      timeout: 20s
+      
+  tasks:
+    - ansible.builtin.include_role: 
+        name: benchfaster/init
+
+    - name: Launch mosquitto/mqtt-stresser workflow
+      ansible.builtin.include_tasks: workflows/mosquitto_mqttstresser.yml
+      with_items: "{{ mqtt_stresser.num_clients }}"
+      loop_control:
+        loop_var: num_clients_item
+    
+    - ansible.builtin.include_role: 
+        name: benchfaster/finish
+

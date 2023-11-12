@@ -1,0 +1,6 @@
+---
+# vars file for roles/applications/mosquitto
+mosquitto:
+  version: 1.6.15
+  port: 31883
+  max_replicas: 1

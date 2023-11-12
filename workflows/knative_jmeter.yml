@@ -1,25 +1,10 @@
-- ansible.builtin.set_fact:
-    network:
-      intra:
-        name: "{{ net_item.0 }}"
-        delay: "{{ net_item.1 }}"
-        variance: "{{ net_item.2 }}"
-        loss: "{{ net_item.3 }}"
-      tm:
-        name: "{{ net_item.4 }}"
-        delay: "{{ net_item.5 }}"
-        variance: "{{ net_item.6 }}"
-        loss: "{{ net_item.7 }}"
-  when: net_item is defined
-
-- name: Launch knative workflow
-  ansible.builtin.include_role:
+- ansible.builtin.include_role:
     name: "{{ role_item }}"
   with_items:
     - benchfaster/start
     - applications/knative/deploy
     - applications/knative/functions
-    - benchmark/jmeter
+    - benchmark-tools/jmeter
     - benchfaster/stop
   loop_control:
     loop_var: role_item

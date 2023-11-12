@@ -3,7 +3,7 @@
   vars:
     registry: 
       user: ubuntu
-      ip: 192.168.1.247
+      ip: 
       port: 5000
       dname: local-registry
     container_images:
@@ -18,5 +18,6 @@
       - fcarp10/fib-fn
       - fcarp10/sleep-fn
       - fcarp10/sleep
+      - eclipse-mosquitto:1.6.15
   tasks:
     - ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/registry/registry_deploy.yml"

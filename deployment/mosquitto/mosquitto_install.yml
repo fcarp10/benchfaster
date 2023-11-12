@@ -1,3 +1,0 @@
-- name: Install Mosquitto
-  ansible.builtin.script: "{{ toolkit_dir }}/mosquitto/mosquitto_install.sh {{ mosquitto.max_replicas }}"
-  delegate_to: "{{ groups['headnodes'][0] }}"

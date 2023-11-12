@@ -1,0 +1,16 @@
+---
+# tasks file for roles/benchmark-tools/jmeter
+- name: Copy .jmx files to tester node
+  ansible.builtin.synchronize:
+    src: "{{ playbook_dir }}/roles/benchmark-tools/jmeter/files/"
+    dest: /tmp/benchfaster/
+    mode: push
+
+- name: Run JMeter test
+  ansible.builtin.shell: |
+    jmeter -n -t /tmp/benchfaster/{{ jmeter.file }}.jmx \ 
+      -Jrequest.ip={{ jmeter.url }} \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -l {{ results_path.path }}/jmeter_W-{{ groups['workers'] | length }}_Q-{{ netem.name }}.csv

@@ -1,5 +1,19 @@
 ---
-# tasks file for roles/benchfaster/deploy
+# tasks file for roles/benchfaster/start
+- ansible.builtin.set_fact:
+    network:
+      intra:
+        name: "{{ net_item.0 }}"
+        delay: "{{ net_item.1 }}"
+        variance: "{{ net_item.2 }}"
+        loss: "{{ net_item.3 }}"
+      tm:
+        name: "{{ net_item.4 }}"
+        delay: "{{ net_item.5 }}"
+        variance: "{{ net_item.6 }}"
+        loss: "{{ net_item.7 }}"
+  when: net_item is defined
+
 - name: Set group for workers
   add_host:
     name: "{{ node_item }}"
