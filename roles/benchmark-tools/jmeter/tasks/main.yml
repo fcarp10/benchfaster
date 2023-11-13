@@ -6,6 +6,18 @@
     dest: /tmp/benchfaster/
     mode: push
 
+- ansible.builtin.set_fact:
+    jmeter:
+      "{{ jmeter | default({}) | combine({'opt_param_key': ''}) }}"
+
+- ansible.builtin.set_fact:
+    jmeter: 
+      "{{ jmeter | default({}) | combine({'opt_param_value': ''}) }}"
+
+- ansible.builtin.set_fact:
+    jmeter:
+      "{{ jmeter | default({}) | combine({'data_source': ''}) }}"
+
 - name: Run JMeter test
   ansible.builtin.shell: |
     jmeter -n -t /tmp/benchfaster/{{ jmeter.file }} \ 
@@ -13,4 +25,6 @@
       -Jrequest.port={{ jmeter.port }} \
       -Jrequest.path={{ jmeter.path }} \
       -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
       -l {{ results_path.path }}/jmeter_W-{{ groups['workers'] | length }}_Q-{{ netem.name }}.csv

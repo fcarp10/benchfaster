@@ -1,6 +1,8 @@
 - name: Hello-world playbook example with WAN emulation for knative and jmeter
   hosts: testers
   vars:
+    application: knative
+    benchmark_tool: jmeter
     jmeter: 
       url: "hello-world.default.{{ address_benchmark }}.nip.io"
       port: 80
@@ -26,7 +28,7 @@
         name: benchfaster/init
 
     - name: Launch knative/jmeter workflow
-      ansible.builtin.include_tasks: workflows/knative_jmeter.yml
+      ansible.builtin.include_tasks: workflows/knative_simple.yml
       with_together:
         - "{{ network_sets.intra.name }}"
         - "{{ network_sets.intra.delay }}"

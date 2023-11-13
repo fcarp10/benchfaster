@@ -1,0 +1,16 @@
+- ansible.builtin.include_role:
+    name: applications/knative/function-add
+
+- ansible.builtin.set_fact:
+    hey: "{{hey | combine({'num_clients': num_clients_item})}}"
+  when: num_clients_item is defined
+
+- ansible.builtin.set_fact:
+    hey: "{{hey | combine({'payload': payload_item})}}"
+  when: payload_item is defined
+
+- ansible.builtin.include_role:
+    name: benchmark-tools/hey
+
+- ansible.builtin.include_role:
+    name: applications/knative/function-delete

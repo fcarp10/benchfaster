@@ -1,9 +1,0 @@
-- name: Install Knative
-  ansible.builtin.script: "{{ toolkit_dir }}/knative/install.sh \
-      machine \
-      {{ knative.version }} \
-      {{ address_benchmark }} \
-      {{ registry.dname }} \
-      {{ registry.port }}"
-  become: yes
-  delegate_to: "{{ groups['headnodes'][0] }}"

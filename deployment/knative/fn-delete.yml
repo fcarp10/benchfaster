@@ -1,6 +1,0 @@
-- name: Delete Knative function
-  ansible.builtin.shell: |
-    sudo -E kubectl delete service.serving.knative.dev {{ functions_item }}
-    sudo -E kubectl wait --for=delete pod --all -n default --timeout=10m
-  become: yes
-  delegate_to: "{{ groups['headnodes'][0] }}"

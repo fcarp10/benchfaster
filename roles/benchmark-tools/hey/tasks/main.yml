@@ -1,0 +1,6 @@
+---
+# tasks file for roles/benchmark-tools/hey
+- name: Run Hey test
+  ansible.builtin.shell: |
+    hey -c {{ hey.num_clients }} -z {{ hey.duration }} -d "{{ hey.payload }}" "http://{{ hey.url }}:{{ hey.port }}" \
+    >> {{ results_path.path }}/hey_W-{{ groups['workers'] | length }}_Q-{{ netem.name }}_T-{{ hey.num_clients }}_L-{{ hey.payload }}.txt

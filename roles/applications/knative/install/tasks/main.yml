@@ -1,0 +1,11 @@
+---
+# tasks file for roles/applications/knative/knative-main
+- name: Install Knative
+  ansible.builtin.script: "install.sh \
+      machine \
+      {{ knative.version }} \
+      {{ address_benchmark }} \
+      {{ registry.dname }} \
+      {{ registry.port }}"
+  become: yes
+  delegate_to: "{{ groups['headnodes'][0] }}"

@@ -1,0 +1,20 @@
+- ansible.builtin.include_role:
+    name: "{{ role_item }}"
+  with_items:
+    - benchfaster/start
+    # - benchfaster/registry-add
+    - applications/knative/install
+  loop_control:
+    loop_var: role_item
+
+- name: Run benchmark per each num_clients and payload
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/workflows/knative_hey_scalability/hey_loop.yml"
+  vars:
+    - num_clients_item: "{{ sub_item.0 }}"
+    - payload_item: "{{ sub_item.1 }}"
+  loop: "{{ hey.num_clients_set |  product(hey.payload_set)  | list }}"
+  loop_control:
+    loop_var: sub_item
+
+- ansible.builtin.include_role:
+    name: benchfaster/stop

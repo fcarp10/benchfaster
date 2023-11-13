@@ -3,15 +3,15 @@
 - ansible.builtin.set_fact:
     network:
       intra:
-        name: "{{ net_item.0 }}"
-        delay: "{{ net_item.1 }}"
-        variance: "{{ net_item.2 }}"
-        loss: "{{ net_item.3 }}"
+        name: "{{ net_item.0 | default('0-intra') }}"
+        delay: "{{ net_item.1 | default('0') }}"
+        variance: "{{ net_item.2 | default('0') }}"
+        loss: "{{ net_item.3 | default('0') }}"
       tm:
-        name: "{{ net_item.4 }}"
-        delay: "{{ net_item.5 }}"
-        variance: "{{ net_item.6 }}"
-        loss: "{{ net_item.7 }}"
+        name: "{{ net_item.4 | default('0-tm') }}"
+        delay: "{{ net_item.5 | default('0') }}"
+        variance: "{{ net_item.6 | default('0') }}"
+        loss: "{{ net_item.7 | default('0') }}"
   when: net_item is defined
 
 - name: Set group for workers

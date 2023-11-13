@@ -12,7 +12,6 @@
       id: "test-id"
       time: 1
 
-      
   tasks:
     - ansible.builtin.include_role: 
         name: benchfaster/init
