@@ -2,7 +2,7 @@
     netem: "{{ network.intra }}"
 
 - name: Apply netem set "{{ netem.name }}" (Machines)
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/netem_add.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_add.yml"
   args:
     apply:
       delegate_to: "{{ hitem }}"
@@ -11,7 +11,7 @@
     loop_var: hitem
 
 - name: Apply netem set "{{ netem.name }}" (Headnode)
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/netem_add.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_add.yml"
   args:
     apply:
       delegate_to: "{{ hitem }}"
@@ -23,7 +23,7 @@
     netem: "{{ network.tm }}"
 
 - name: Apply netem set "{{ netem.name }}" (Testers)
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/core/netem/netem_add.yml"
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_add.yml"
   args:
     apply:
       delegate_to: "{{ hitem }}"

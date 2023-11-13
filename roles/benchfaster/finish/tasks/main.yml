@@ -11,3 +11,9 @@
     path: "/tmp/benchfaster/_results/{{ foldername }}"
     state: absent
   register: results_path
+
+- name: Delete /tmp/benchfaster directory from headnode
+  file:
+    path: /tmp/benchfaster
+    state: absent
+  delegate_to: "{{ groups['headnodes'][0] }}"

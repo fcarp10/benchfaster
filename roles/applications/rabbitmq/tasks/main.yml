@@ -1,5 +1,14 @@
 ---
 # tasks file for roles/applications/rabbitmq
+- name: Copy files folder to headnode
+  copy:
+    src: "files/"
+    dest: /tmp/benchfaster/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+    
 - name: Install RabbitMQ
   ansible.builtin.script: "rabbitmq_install.sh {{ rabbitmq.max_replicas }}"
   delegate_to: "{{ groups['headnodes'][0] }}"

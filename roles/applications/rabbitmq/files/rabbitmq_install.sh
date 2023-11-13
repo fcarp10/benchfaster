@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PAYLOAD_DIR=/tmp/benchfaster/payload
+PAYLOAD_DIR=/tmp/benchfaster
 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 for worker in $(sudo -E kubectl get nodes | grep -v control-plane | grep -v NAME | sed 's/\s.*$//'); do

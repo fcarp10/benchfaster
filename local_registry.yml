@@ -20,4 +20,4 @@
       - fcarp10/sleep
       - eclipse-mosquitto:1.6.15
   tasks:
-    - ansible.builtin.include_tasks: "{{ playbook_dir }}/deployment/core/registry/registry_deploy.yml"
+    - ansible.builtin.include_tasks: "{{ playbook_dir }}/core/registry/registry_deploy.yml"

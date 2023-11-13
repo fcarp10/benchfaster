@@ -4,12 +4,12 @@ functions_deploy() {
     TOOLKITPATH=$2
 	for funct in $1
 	do
-		echo "Deploying $funct from ${REPOSITORY}$(cat $TOOLKITPATH/openfaas-fn/${funct}.yml | grep image | awk '{print $2}')"
-		faas-cli deploy --image=${REPOSITORY}/$(cat $TOOLKITPATH/openfaas-fn/${funct}.yml | grep image | awk '{print $2}') -f $TOOLKITPATH/openfaas-fn/${funct}.yml
+		echo "Deploying $funct from ${REPOSITORY}$(cat $TOOLKITPATH/${funct}.yml | grep image | awk '{print $2}')"
+		faas-cli deploy --image=${REPOSITORY}/$(cat $TOOLKITPATH/${funct}.yml | grep image | awk '{print $2}') -f $TOOLKITPATH/${funct}.yml
 			sleep 2
-			if [ -f $TOOLKITPATH/openfaas-fn/${funct}-hpa.yml ]
+			if [ -f $TOOLKITPATH/${funct}-hpa.yml ]
 			then
-					kubectl apply -f $TOOLKITPATH/openfaas-fn/${funct}-hpa.yml
+					kubectl apply -f $TOOLKITPATH/${funct}-hpa.yml
 			if [ $? -ne 0 ]; then echo "There was an error while deploying $funct. Aborting..." \
 			&& exit 2; fi
 					sleep 2
@@ -36,7 +36,7 @@ DEBUG=$6
 REPO_NAME=$7
 REPO_PORT=$8
 
-TOOLKITPATH="/tmp/benchfaster/payload"
+TOOLKITPATH="/tmp/benchfaster"
 echo $TOOLKITPATH
 cd $TOOLKITPATH
 

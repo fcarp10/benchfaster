@@ -8,7 +8,7 @@ REPO_PORT=$5
 
 if [ $DEVTYPE = "vm" ]
 then
-    TOOLKITPATH="/vagrant/benchfaster/deployment"
+    TOOLKITPATH="/vagrant/benchfaster"
     cd $TOOLKITPATH
 else
     TOOLKITPATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../

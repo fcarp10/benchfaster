@@ -2,7 +2,7 @@
 # tasks file for roles/applications/knative/knative-functions
 - name: Install Knative function
   ansible.builtin.shell: |
-    sudo -E kubectl apply -f /tmp/benchfaster/payload/knative-fn/{{ function.name }}.yaml
+    sudo -E kubectl apply -f /tmp/benchfaster/{{ function.name }}.yaml
     sleep 5
     sudo -E kubectl -n default rollout status deploy/{{ function.name }}-00001-deployment --timeout=60s
     sleep 5

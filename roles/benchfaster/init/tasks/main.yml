@@ -6,8 +6,7 @@
 
 - name: Set toolkit directory
   ansible.builtin.set_fact:
-    toolkit_dir: "{{ playbook_dir }}/deployment"
-    tests_dir: "{{ playbook_dir }}/benchmark"
+    toolkit_dir: "{{ playbook_dir }}/core"
 
 #TODO: check this for redundancy
 - name: Create results directory
