@@ -12,3 +12,4 @@ ansible.log
 _data*
 *.swp
 *.py
+_key*

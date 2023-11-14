@@ -6,8 +6,8 @@
     src: "{{ toolkit_dir }}/{{ file }}"
     dest: /tmp/benchfaster/
   with_items:
-    - core/vagrant/Vagrantfile
-    - core/vagrant/environment.rb
+    - vagrant/Vagrantfile
+    - vagrant/environment.rb
   loop_control:
     loop_var: file
 
@@ -100,12 +100,3 @@
   loop: "{{ range(1, hostvars[current_hv].num_workers + 1, 1)|list }}"
   loop_control: 
     loop_var: vm_worker_index
-
-- name: Register headnode
-  ansible.builtin.set_fact:
-    headnode: "{{ hostvars[groups.vms[i]] }}"
-  loop: "{{ range(0, groups.machines|length, 1)|list }}"
-  loop_control:
-    index_var: i
-    loop_var: headnode_item
-  when: hostvars[groups.machines[headnode_item]].headnode is defined
