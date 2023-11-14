@@ -1,0 +1,22 @@
+hypervisors:
+  hosts:
+    machine01:
+      ansible_host: 192.168.1.247
+      ansible_user: superubuntu
+      interface: enp0s31f6
+      arch: amd64
+      num_workers: 3
+      vagrant:
+        vm_image: generic/ubuntu2004
+        vm_mem: 2048
+        vm_cpu: 2
+
+testers:
+  hosts:
+    tester01:
+      ansible_host: 192.168.1.245
+      ansible_user: ubuntu
+      interface: eno1
+      arch: amd64
+      address_benchmark: 192.168.1.247
+        
