@@ -7,8 +7,8 @@ cert/
 inventory/
 playbook*
 ansible.log
-*.drawio.bkp
-*.drawio.dtmp
+*.bkp
+*.dtmp
 _data*
 *.swp
 *.py

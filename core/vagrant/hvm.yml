@@ -23,7 +23,7 @@
     path: /tmp/benchfaster/environment.rb
     regexp: '$VM_IMAGE ='
     insertafter: 'module Variables'
-    line: '    $VM_IMAGE = "{{ hostvars[current_hv].vagrant.vm_image }}"'
+    line: '    $VM_IMAGE = "{{ hostvars[current_hv].vagrant.image }}"'
 
 #TODO: make the benchmark address more dynamic
 - name: configure Vagrant address
@@ -38,21 +38,21 @@
     path: /tmp/benchfaster/environment.rb
     regexp: '$VM_MEM ='
     insertafter: 'module Variables'
-    line: '    $VM_MEM = "{{ hostvars[current_hv].vagrant.vm_mem }}"'
+    line: '    $VM_MEM = "{{ hostvars[current_hv].vagrant.memory }}"'
 
 - name: configure Vagrant CPUs
   ansible.builtin.lineinfile:
     path: /tmp/benchfaster/environment.rb
     regexp: '$VM_CPU ='
     insertafter: 'module Variables'
-    line: '    $VM_CPU = "{{ hostvars[current_hv].vagrant.vm_cpu }}"'
+    line: '    $VM_CPU = "{{ hostvars[current_hv].vagrant.cpu }}"'
 
 - name: configure number of Vagrant machines
   ansible.builtin.lineinfile:
     path: /tmp/benchfaster/environment.rb
     regexp: '$NUM_WORKERS ='
     insertafter: 'module Variables'
-    line: '    $NUM_WORKERS = {{ hostvars[current_hv].num_workers }}'
+    line: '    $NUM_WORKERS = {{ hostvars[current_hv].vagrant.num_workers }}'
 
 - name: destroy old Vagrant machines
   ansible.builtin.script: "{{ toolkit_dir }}/vagrant/destroy_machines.sh /tmp/benchfaster"
@@ -97,6 +97,6 @@
 
 - name: Add VM workers to inventory
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/vagrant/add_workers.yml"
-  loop: "{{ range(1, hostvars[current_hv].num_workers + 1, 1)|list }}"
+  loop: "{{ range(1, hostvars[current_hv].vagrant.num_workers + 1, 1)|list }}"
   loop_control: 
     loop_var: vm_worker_index

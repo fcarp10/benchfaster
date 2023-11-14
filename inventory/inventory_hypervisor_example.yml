@@ -5,11 +5,11 @@ hypervisors:
       ansible_user: superubuntu
       interface: enp0s31f6
       arch: amd64
-      num_workers: 3
       vagrant:
-        vm_image: generic/ubuntu2004
-        vm_mem: 2048
-        vm_cpu: 2
+        num_workers: 3 
+        image: generic/ubuntu2004
+        memory: 2048
+        cpu: 2
 
 testers:
   hosts:
