@@ -53,10 +53,10 @@ apps over emulated WANs
     <ul>
         <li><a href="#inventory-files">Inventory files</a></li>
         <li><a href="#local-registry">Local registry</a></li>
-        <li><a href="#playbooks">Playbooks</a></li>
+        <li><a href="#playbooks-and-roles">Playbooks and roles</a></li>
     </ul>
     <!-- <li><a href="#roadmap">Roadmap</a></li> -->
-    <!-- <li><a href="#contributing">Contributing</a></li> -->
+    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <!-- <li><a href="#contact">Contact</a></li> -->
     <!-- <li><a href="#acknowledgments">Acknowledgments</a></li> -->
@@ -169,6 +169,7 @@ Hypervisors
 
 See an example of an inventory file with Hypervisors [here](inventory/inventory_hypervisor_example.yml).
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Local registry
 
@@ -176,20 +177,72 @@ Deploying a local container registry is optional, but recommended
 ```shell
 ansible-playbook -i inventory/inventory_example.yml local_registry.yml
 ```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Playbooks
+### Playbooks and roles
 
-Run playbooks
+Playbooks run specific workflows to perform single or multiple tests using a
+specific benchmarking tool against an application. Playbooks also define a set
+of variables necessary to run the workflow. 
+
+Required vars
+- `application`: application to test (`knative`, `openfaas`, `mosquitto`, `rabbitmq`)
+- `benchmark_tool`: Benchmarking tool (`jmeter`, `k6`, `hey`)
+
+Depending of the specific benchmarking tool, additional variables are expected
+- `${BENCHMARL_TOOL}.url`: URL used for the tests
+- `${BENCHMARL_TOOL}.port`: port used for the
+- `${BENCHMARL_TOOL}.path`: specific URL path 
+
+See examples of expected variables for each tool in [jmeter](openfaas_jmeter_example.yml) and [k6](openfaas_k6_example.yml).
+
+Every playbook includes a set of roles which defines the workflow. In
+BenchFaster, three directories divide roles into three categories,
+`applications` and `benchmark-tools` to contain all the roles related to apps
+and benchmarking tools; and `benchfaster` directory which contains all the roles
+related to the BenchFaster's core components.
+
+Every playbook needs to include at least the following roles
+
+- `benchfaster/init`: creates new directory for results files  
+- `benchfaster/start`: deploys all core components
+- `applications/{{ application }}`: deploys the specific `application`
+- `benchmark-tools/{{ benchmark_tool }}`: runs tests using the specific `benchmark-tool`
+- `benchfaster/stop`: retrieves result files to the control node
+- `benchfaster/finish`: cleanup temporal directories
+
+See an example of a simple workflow is defined in
+[generic_simple.yml](workflows/generic_simple.yml) which is then run by, for instance, [openfaas_jmeter_example.yml](openfaas_jmeter_example.yml) playbook.
+
+To run a playbook
 
 ```shell
 ansible-playbook -i inventory/inventory_example.yml ${PLAYBOOK_FILE}.yml
 ```
 
 
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
+### Adding applications/benchmarking-tools
+
+BenchFaster is not limited to the apps and benchmarking tools currently
+supported, but new ones can be added by creating new roles. 
+
+To add a new application
+
+```shell
+ansible-galaxy init roles/applications/rabbitmq
+```
+To add a new benchmarking tool
+```shell
+ansible-galaxy init roles/benchmark-tools/hey 
+```
+In both cases, this will create a directory within `roles` with the expected
+structure. For more details, read the docs from
+[Ansible](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 <!-- ## Roadmap
@@ -206,12 +259,9 @@ See the [open issues](https://github.com/fcarp10/benchfaster/issues) for a full 
 
 
 <!-- CONTRIBUTING -->
-<!-- ## Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+## Contributing
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -219,7 +269,7 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p> -->
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
