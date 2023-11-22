@@ -2,7 +2,7 @@
     name: "{{ role_item }}"
   with_items:
     - benchfaster/start
-    # - benchfaster/registry-add
+    - benchfaster/registry-add
     - applications/knative/install
   loop_control:
     loop_var: role_item

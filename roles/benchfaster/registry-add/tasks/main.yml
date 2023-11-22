@@ -16,3 +16,4 @@
   loop: "{{ groups['all'] }}"
   loop_control:
     loop_var: hitem
+  ignore_errors: yes
