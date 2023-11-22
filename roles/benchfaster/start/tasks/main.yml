@@ -40,6 +40,9 @@
     - "hostvars[node_item].headnode is defined"
     - "hostvars[node_item].inventory_hostname not in groups['testers']"
 
+- name: Delete netem from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_delete.yml"
+
 # TODO: respect interface setting for this command
 - name: Determine headnode IP
   shell:
@@ -97,10 +100,6 @@
   loop_control:
     loop_var: current_host
 
-- name: Delete netem from all nodes
-  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_delete.yml"
-  when: hvm is not defined
-
 #TODO: check which of these files are actually necessary to be copied
 - name: Install Nebula on headnode
   ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[groups['headnodes'][0]].arch }} lighthouse 127.0.0.99"
@@ -115,8 +114,6 @@
 
 - name: Deploy k3s cluster
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/k3s/k3s_cluster.yml"
-  when: hvm is not defined
 
 - name: Apply netem to all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem.yml"
-  when: hvm is not defined

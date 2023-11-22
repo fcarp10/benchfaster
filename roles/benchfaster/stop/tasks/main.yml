@@ -20,6 +20,5 @@
 
 - name: Delete netem from all nodes
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_delete.yml"
-  when: hvm is not defined
 
 # -name: Uninstall K3s (TO-DO)

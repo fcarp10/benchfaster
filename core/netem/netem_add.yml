@@ -1,5 +1,4 @@
 - ansible.builtin.shell: |
-    echo "netem set {{ netem.name }} [host: {{ hitem }}, interface: {{ hostvars[hitem].interface }}, delay: {{ netem.delay }}ms, variance: {{ netem.variance }}ms, loss: {{ netem.loss }}%]..."
     if [ $(echo "{{ netem.delay }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ netem.variance }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ netem.loss }} != 0" | bc -l) -eq 1 ]; then
       tc qdisc add dev {{ hostvars[hitem].interface }} root netem delay {{ netem.delay }}ms {{ netem.variance }}ms distribution normal loss {{ netem.loss }}% 
       echo "Delay, variance and loss added!" 
