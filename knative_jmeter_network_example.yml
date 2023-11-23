@@ -4,7 +4,7 @@
     application: knative
     benchmark_tool: jmeter
     jmeter: 
-      url: "hello-world.default.{{ address_benchmark }}.nip.io"
+      url: "hello-world.functions.{{ address_benchmark }}.nip.io"
       port: 80
       path: /
       file: hello-world.jmx
