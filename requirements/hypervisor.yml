@@ -4,6 +4,8 @@
 
     - name: Add vagrant APT repo (Ubuntu 22.04)
       ansible.builtin.shell: |
+        sudo rm /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
         echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
       become: true
       when: ansible_facts['distribution']=="Ubuntu"
