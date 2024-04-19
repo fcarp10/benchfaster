@@ -2,9 +2,18 @@
 # tasks file for roles/applications/knative/knative-functions
 - name: Install Knative function
   ansible.builtin.shell: |
-    sudo -E kubectl apply -f /tmp/benchfaster/{{ function.name }}.yaml
+    sudo -E kubectl apply -f /tmp/benchfaster/{{ func_item }}.yaml
     sleep 5
-    sudo -E kubectl -n default rollout status deploy/{{ function.name }}-00001-deployment --timeout=60s
+    if [ echo "{{ func_item }}" | grep namespace]
+    then
+      sleep 3
+    else
+      sudo -E kubectl -n default rollout status deploy/{{ func_item }}-00001-deployment --timeout=60s
+    fi
     sleep 5
   become: yes
+  with_items:
+    - "{{ functions }}"
+  loop_control:
+    loop_var: func_item
   delegate_to: "{{ groups['headnodes'][0] }}"
