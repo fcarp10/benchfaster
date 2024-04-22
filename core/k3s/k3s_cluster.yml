@@ -47,7 +47,7 @@
   ansible.builtin.lineinfile:
     path: /tmp/k3s/config.yaml
     regexp: 'advertise-address:'
-    line: 'advertise-address: 192.168.50.99'
+    line: 'advertise-address: 192.168.50.90'
   delegate_to: "{{ groups['headnodes'][0] }}"
 
 - name: Configure k3s client flannel interface
@@ -112,7 +112,7 @@
   ansible.builtin.lineinfile:
     path: /tmp/k3s/config.yaml
     regexp: 'server:'
-    line: "server: https://192.168.50.99:{{ k3s.k3s_port }}"
+    line: "server: https://192.168.50.90:{{ k3s.k3s_port }}"
   delegate_to: "{{ current_host }}"
   loop: "{{ groups['workers'] }}"
   loop_control:
@@ -122,7 +122,7 @@
   ansible.builtin.shell: |
     /usr/local/bin/k3s-uninstall.sh > /dev/null
     /usr/local/bin/k3s-agent-uninstall.sh > /dev/null
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.k3s_version }}" K3S_NODE_NAME="{{ hostvars[current_host].inventory_hostname }}" K3S_URL="https://192.168.50.99:{{ k3s.k3s_port }}" K3S_TOKEN="{{ k3s_token.stdout }}" INSTALL_K3S_EXEC="--config /tmp/k3s/config.yaml" sh -
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.k3s_version }}" K3S_NODE_NAME="{{ hostvars[current_host].inventory_hostname }}" K3S_URL="https://192.168.50.90:{{ k3s.k3s_port }}" K3S_TOKEN="{{ k3s_token.stdout }}" INSTALL_K3S_EXEC="--config /tmp/k3s/config.yaml" sh -
   delegate_to: "{{ current_host }}"
   loop: "{{ groups['workers'] }}"
   loop_control:
