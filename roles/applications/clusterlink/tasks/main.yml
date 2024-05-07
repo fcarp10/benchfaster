@@ -126,21 +126,39 @@
   loop_control:
     loop_var: headnode
 
-### TODO: fix this copying problem
-#- name: Copy files folder from headnode
-#  copy:
-#    src: "/tmp/benchfaster/clusterlink-deployment/default_fabric/cluster{{ hostvars[current_host].cluster }}"
-#    dest: "/tmp/benchfaster/clusterlink-deployment/cluster{{ hostvars[current_host].cluster }}"
-##    remote_src: yes
-#  delegate_to: "{{ current_host }}"
-#  loop: "{{ groups['headnodes'] }}"
-#  loop_control:
-#    loop_var: current_host
+- name: Create default_fabric folder
+  file:
+    path: /tmp/benchfaster/clusterlink-deployment/default_fabric
+    state: directory
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
 
-- name: Copy certificates to headnodes
+# TODO: This part has to be removed once the corresponding bug in clusterlink is fixed 
+# https://github.com/clusterlink-net/clusterlink/issues/565
+- name: TO BE DELETED Copy root private key to headnodes
   copy:
-    src: /tmp/benchfaster/clusterlink-deployment/default_fabric
-    dest: /tmp/benchfaster/clusterlink-deployment/
+    src: /tmp/benchfaster/clusterlink-deployment/default_fabric/key.pem
+    dest: /tmp/benchfaster/clusterlink-deployment/default_fabric/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Copy root certificate to headnodes
+  copy:
+    src: /tmp/benchfaster/clusterlink-deployment/default_fabric/cert.pem
+    dest: /tmp/benchfaster/clusterlink-deployment/default_fabric/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Copy cluster certificates to headnodes
+  copy:
+    src: "/tmp/benchfaster/clusterlink-deployment/default_fabric/cluster{{ hostvars[current_host].cluster }}"
+    dest: /tmp/benchfaster/clusterlink-deployment/default_fabric/
   delegate_to: "{{ current_host }}"
   loop: "{{ groups['headnodes'] }}"
   loop_control:
