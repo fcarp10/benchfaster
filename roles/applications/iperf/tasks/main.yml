@@ -1,0 +1,205 @@
+---
+# tasks file for roles/applications/iperf
+- name: Create iperf server
+  become: yes
+  shell: |
+    echo "
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: iperf3-server-deployment
+      labels:
+        app: iperf3-server
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: iperf3-server
+      template:
+        metadata:
+          labels:
+            app: iperf3-server
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                  - key: kubernetes.io/role
+                    operator: In
+                    values:
+                    - master
+          tolerations:
+            - key: node-role.kubernetes.io/master
+              operator: Exists
+              effect: NoSchedule
+          containers:
+          - name: iperf3-server
+            image: mlabbe/iperf3
+            imagePullPolicy: IfNotPresent
+            args: ['-s', '-p', '5000']
+          terminationGracePeriodSeconds: 0
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: iperf3-server
+    spec:
+      type: NodePort
+      selector:
+        app: iperf3-server
+      ports:
+        - port: 5000
+          targetPort: 5000
+          nodePort: 30001
+    " | kubectl apply -f -
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+# TODO: convert to single pod and try again. NodePort conneciton is working, so this is a
+# clusterlink issue
+- name: Create iperf clients
+  become: yes
+  shell: |
+    echo "
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: iperf3-client
+      labels:
+        app: iperf3-client
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: iperf3-client
+          image: mlabbe/iperf3
+          imagePullPolicy: IfNotPresent
+          command: ['/bin/sh', '-c', 'sleep infinity']
+      terminationGracePeriodSeconds: 0
+    " | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+#  when:
+#    - "current_host != groups['headnodes'][0]"
+
+#    apiVersion: apps/v1
+#    kind: DaemonSet
+#    metadata:
+#      name: iperf3-client
+#      labels:
+#        app: iperf3-client
+#    spec:
+#      selector:
+#        matchLabels:
+#          app: iperf3-client
+#      template:
+#        metadata:
+#          labels:
+#            app: iperf3-client
+#        spec:
+#          tolerations:
+#            - key: node-role.kubernetes.io/master
+#              operator: Exists
+#              effect: NoSchedule
+#          containers:
+#          - name: iperf3-client
+#            image: mlabbe/iperf3
+#            imagePullPolicy: IfNotPresent
+#            command: ['/bin/sh', '-c', 'sleep infinity']
+#          terminationGracePeriodSeconds: 0
+
+- name: Export iperf server
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: Export
+    metadata:
+      name: iperf3-server
+      namespace: default
+    spec:
+      port:  5000
+    " | kubectl apply -f -
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+#- name: Allow iperf server
+#  become: yes
+#  shell: |
+#    echo "
+#    apiVersion: clusterlink.net/v1alpha1
+#    kind: AccessPolicy
+#    metadata:
+#      name: allow-policy
+#      namespace: default
+#    spec:
+#      action: allow
+#      from:
+#        - workloadSelector: {}
+#      to:
+#        - workloadSelector: {}
+#    " | kubectl apply -f -
+#  delegate_to: "{{ groups['headnodes'][0] }}"
+#
+- name: Import iperf clients
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: Import
+    metadata:
+      name: iperf3-server
+      namespace: default
+    spec:
+      port: 5000
+      sources:
+        - exportName: iperf3-server
+          exportNamespace: default
+          peer: cluster{{  hostvars[groups['headnodes'][0]].cluster }}
+    " | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Allow iperf clients
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: AccessPolicy
+    metadata:
+      name: allow-policy
+      namespace: default
+    spec:
+      action: allow
+      from:
+      - workloadSelector: {}
+      to:
+      - workloadSelector: {}
+    " | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+#  when:
+#    - "current_host != groups['headnodes'][0]"
+
+- name: Test iperf client
+  become: yes
+  shell: |
+    kubectl exec -i iperf3-client -- iperf3 -c iperf3-server --port 5000
+  retries: 1
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"

@@ -11,12 +11,28 @@
 - name: Generate nebula certificates - lighthouse
   ansible.builtin.shell: |
       nebula-cert ca -name "BenchFaster"
-      nebula-cert sign -name "lighthouse" -ip "192.168.50.99/24"
+      nebula-cert sign -name "lighthouse" -ip "192.168.50.{{ 98 + hostvars[groups['headnodes'][0]].cluster }}/24"
+  args:
+    chdir: "{{ toolkit_dir }}/nebula/config/cert/"
+
+#- name: Dump inventory
+#  debug: var=hostvars[headnode_item].cluster
+#  loop: "{{ groups['headnodes'] }}"
+#  loop_control:
+#    loop_var: headnode_item
+
+- name: Generate nebula certificates - headnodes
+  ansible.builtin.shell: nebula-cert sign -name "{{ hostvars[headnode_item].inventory_hostname }}" -ip "192.168.50.{{ 98 + hostvars[headnode_item].cluster }}/24"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode_item
+  when:
+    - headnode_item != groups['headnodes'][0]
   args:
     chdir: "{{ toolkit_dir }}/nebula/config/cert/"
 
 - name: Generate nebula certificates - workers
-  ansible.builtin.shell: nebula-cert sign -name "{{ hostvars[worker_item].inventory_hostname }}" -ip "192.168.50.10{{ i + 1 }}/24"
+  ansible.builtin.shell: nebula-cert sign -name "{{ hostvars[worker_item].inventory_hostname }}" -ip "192.168.50.{{ 1 + i }}/24"
   loop: "{{ groups['workers'] }}"
   loop_control:
     index_var: i

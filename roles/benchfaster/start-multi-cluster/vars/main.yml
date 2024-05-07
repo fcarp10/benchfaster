@@ -1,0 +1,25 @@
+---
+# vars file for core
+nebula: 
+  nebula_version: 1.8.2
+  nebula_address: lighthouse
+  nebula_port: 4242
+k3s: 
+  k3s_version: v1.29.3+k3s1
+  k3s_port: 6443
+registry:
+  user:
+  ip: 
+  port:
+  dname:
+network:
+  intra:
+    name: 0-intra
+    delay: 0
+    variance: 0
+    loss: 0
+  tm:
+    name: 0-tm
+    delay: 0   
+    variance: 0
+    loss: 0

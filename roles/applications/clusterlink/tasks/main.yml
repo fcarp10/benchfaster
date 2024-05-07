@@ -1,0 +1,183 @@
+---
+# tasks file for roles/applications/clusterlink
+- name: Delete clusterlink folders from localhost
+  ansible.builtin.file:
+    path: /tmp/benchfaster/clusterlink
+    state: absent
+  delegate_to: localhost
+
+- name: Delete clusterlink folders from all headnodes
+  ansible.builtin.file:
+    path: /tmp/benchfaster/clusterlink
+    state: absent
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Delete clusterlink-deployment folders from localhost
+  ansible.builtin.file:
+    path: /tmp/benchfaster/clusterlink-deployment
+    state: absent
+  delegate_to: localhost
+
+- name: Delete clusterlink-deployment folders from all headnodes
+  ansible.builtin.file:
+    path: /tmp/benchfaster/clusterlink-deployment
+    state: absent
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Clone clusterlink to localhost
+  shell:
+    cmd: git clone https://github.com/clusterlink-net/clusterlink.git /tmp/benchfaster/clusterlink
+  delegate_to: localhost
+
+- name: Clone clusterlink to all headnodes
+  shell:
+    cmd: git clone https://github.com/clusterlink-net/clusterlink.git /tmp/benchfaster/clusterlink
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Copy files folder to localhost
+  copy:
+    src: "files/"
+    dest: /tmp/benchfaster/clusterlink/
+  delegate_to: localhost
+
+- name: Copy files folder to headnode
+  copy:
+    src: "files/"
+    dest: /tmp/benchfaster/clusterlink/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Create clusterlink binary directory
+  ansible.builtin.file:
+    path: /tmp/benchfaster/clusterlink/bin
+    state: directory
+  delegate_to: localhost
+
+- name: Create clusterlink binary directory
+  ansible.builtin.file:
+    path: /tmp/benchfaster/clusterlink/bin
+    state: directory
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+#    podman build -t clusterlink .
+#    podman create --name builder docker.io/michalke-it/clusterlink:latest
+#    podman cp builder:/app/bin/clusterlink ./bin/
+- name: Compile clusterlink on localhost
+  shell: |
+    cd /tmp/benchfaster/clusterlink
+    docker create --name builder docker.io/michalkeit/clusterlink:latest
+    docker cp builder:/app/bin/clusterlink ./bin/
+    docker rm -f builder
+  delegate_to: localhost
+
+- name: Compile clusterlink on all headnodes
+  shell: |
+    cd /tmp/benchfaster/clusterlink
+    podman create --name builder docker.io/michalkeit/clusterlink:latest
+    podman cp builder:/app/bin/clusterlink ./bin/
+    podman rm -f builder
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Create clusterlink deployment directories
+  ansible.builtin.file:
+    path: /tmp/benchfaster/clusterlink-deployment
+    state: directory
+  delegate_to: localhost
+
+- name: Create clusterlink deployment directories
+  ansible.builtin.file:
+    path: /tmp/benchfaster/clusterlink-deployment
+    state: directory
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+# This should be enhanced with the --container-registry parameter and the registry if provided.
+- name: Create fabric certificates
+  shell:
+    chdir: /tmp/benchfaster/clusterlink-deployment
+    cmd: /tmp/benchfaster/clusterlink/bin/clusterlink create fabric
+  delegate_to: localhost
+
+- name: Create cluster certificates
+  shell:
+    chdir: /tmp/benchfaster/clusterlink-deployment
+    cmd: /tmp/benchfaster/clusterlink/bin/clusterlink create peer-cert --name "cluster{{ hostvars[headnode].cluster }}"
+  delegate_to: localhost
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+### TODO: fix this copying problem
+#- name: Copy files folder from headnode
+#  copy:
+#    src: "/tmp/benchfaster/clusterlink-deployment/default_fabric/cluster{{ hostvars[current_host].cluster }}"
+#    dest: "/tmp/benchfaster/clusterlink-deployment/cluster{{ hostvars[current_host].cluster }}"
+##    remote_src: yes
+#  delegate_to: "{{ current_host }}"
+#  loop: "{{ groups['headnodes'] }}"
+#  loop_control:
+#    loop_var: current_host
+
+- name: Copy certificates to headnodes
+  copy:
+    src: /tmp/benchfaster/clusterlink-deployment/default_fabric
+    dest: /tmp/benchfaster/clusterlink-deployment/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Show certificate folder on headnodes
+  shell:
+    cmd: ls /tmp/benchfaster/clusterlink-deployment/default_fabric/cluster*
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Deploy clusterlink on headnodes
+  shell:
+    chdir: /tmp/benchfaster/clusterlink-deployment
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml KUBERNETES_SERVICE_HOST=192.168.50.{{ 98 + hostvars[current_host].cluster }} KUBERNETES_SERVICE_PORT=30443 /tmp/benchfaster/clusterlink/bin/clusterlink deploy peer --name cluster{{ hostvars[current_host].cluster }} --ingress=NodePort --ingress-port=30443 && sleep 2"
+  retries: 3
+  delay: 3
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Wait for all clusterlink deployments to finish
+  shell: |
+    sleep 3
+    kubectl rollout status deployment cl-controlplane -n clusterlink-system
+    kubectl rollout status deployment cl-dataplane -n clusterlink-system
+  retries: 3
+  delay: 3
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+- include_tasks: cross-registration.yaml
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: outer_host

@@ -1,0 +1,20 @@
+- name: Create clusterlink peers
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: Peer
+    metadata:
+      name: cluster{{ hostvars[inner_host].cluster }}
+      namespace: clusterlink-system
+    spec:
+      gateways:
+        - host: 192.168.50.{{ 98 + hostvars[inner_host].cluster }}
+          port: 30443
+    " | kubectl apply -f -
+  delegate_to: "{{ outer_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: inner_host
+  when:
+    - "inner_host != outer_host"

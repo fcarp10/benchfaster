@@ -1,0 +1,10 @@
+- ansible.builtin.include_role:
+    name: "{{ role_item }}"
+  with_items:
+    - benchfaster/start-multi-cluster
+    - applications/clusterlink
+    - applications/{{ application }}
+#    - benchmark-tools/{{ benchmark_tool }}
+    - benchfaster/stop
+  loop_control:
+    loop_var: role_item

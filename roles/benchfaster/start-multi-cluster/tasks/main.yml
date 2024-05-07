@@ -1,0 +1,210 @@
+---
+# tasks file for roles/benchfaster/start
+- ansible.builtin.set_fact:
+    network:
+      intra:
+        name: "{{ net_item.0 | default('0-intra') }}"
+        delay: "{{ net_item.1 | default('0') }}"
+        variance: "{{ net_item.2 | default('0') }}"
+        loss: "{{ net_item.3 | default('0') }}"
+      tm:
+        name: "{{ net_item.4 | default('0-tm') }}"
+        delay: "{{ net_item.5 | default('0') }}"
+        variance: "{{ net_item.6 | default('0') }}"
+        loss: "{{ net_item.7 | default('0') }}"
+  when: net_item is defined
+
+- name: Set group for workers
+  add_host:
+    name: "{{ node_item }}"
+    groups: workers
+  delegate_to: "{{ node_item }}"
+  loop: "{{ groups['machines'] }}"
+  loop_control:
+    loop_var: node_item
+  when:
+    - "'hypervisors' not in groups"
+    - "hostvars[node_item].headnode is not defined"
+    - "hostvars[node_item].inventory_hostname not in groups['testers']"
+
+- name: Set group for workers
+  add_host:
+    name: "{{ node_item }}"
+    groups: workers
+  delegate_to: "{{ node_item }}"
+  loop: "{{ groups['testers'] }}"
+  loop_control:
+    loop_var: node_item
+  when:
+    - "'hypervisors' not in groups"
+    - "hostvars[node_item].headnode is not defined"
+
+- name: Set group for headnode
+  add_host:
+    name: "{{ node_item }}"
+    groups: headnodes
+  delegate_to: "{{ node_item }}"
+  loop: "{{ groups['machines'] }}"
+  loop_control:
+    loop_var: node_item
+  when:
+    - "'hypervisors' not in groups"
+    - "hostvars[node_item].headnode is defined"
+    - "hostvars[node_item].inventory_hostname not in groups['testers']"
+
+- name: Set group for headnode
+  add_host:
+    name: "{{ node_item }}"
+    groups: headnodes
+  delegate_to: "{{ node_item }}"
+  loop: "{{ groups['testers'] }}"
+  loop_control:
+    loop_var: node_item
+  when:
+    - "'hypervisors' not in groups"
+    - "hostvars[node_item].headnode is defined"
+
+- name: Set cluster groups
+  add_host:
+    name: "{{ node_item }}"
+    groups: cluster{{ hostvars[node_item].cluster }}
+  delegate_to: "{{ node_item }}"
+  loop: "{{ groups['machines'] }}"
+  loop_control:
+    loop_var: node_item
+  when:
+    - "'hypervisors' not in groups"
+
+- name: Set cluster groups
+  add_host:
+    name: "{{ node_item }}"
+    groups: cluster{{ hostvars[node_item].cluster }}
+  delegate_to: "{{ node_item }}"
+  loop: "{{ groups['testers'] }}"
+  loop_control:
+    loop_var: node_item
+  when:
+    - "'hypervisors' not in groups"
+
+- name: Delete netem from all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_delete.yml"
+
+# TODO: respect interface setting for this command
+- name: Determine headnode IP
+  shell:
+    cmd: bash -c "ip addr sh {{ hostvars[groups['headnodes'][0]].interface }} | grep 'inet ' | awk '{print substr(\$2, 1, length(\$2)-3)}'"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+  register: headnodeip
+  when:
+    - "'hypervisors' not in groups"
+    - "hostvars[groups['headnodes'][0]].headnode is defined"
+
+- name: Deploy VMs
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/vagrant/hvm.yml"
+  args:
+    apply:
+      delegate_to: "{{ current_hv }}"
+      delegate_facts: true
+  loop: "{{ groups['hypervisors'] }}"
+  loop_control:
+    loop_var: current_hv
+  when: "'hypervisors' in groups"
+
+- name: Register headnode (VM)
+  ansible.builtin.set_fact:
+    headnode: "{{ hostvars[groups.vms[i]] }}"
+  loop: "{{ groups['vms'] }}"
+  loop_control:
+    index_var: i
+    loop_var: headnode_item
+  when:
+    - "'hypervisors' in groups"
+    - "hostvars[headnode_item].headnode is defined"
+
+- name: DEBUG Echo hostname in cluster1 group
+  shell: |
+    hostnamectl
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['cluster1'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: DEBUG Echo hostname in cluster2 group
+  shell: |
+    hostnamectl
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['cluster2'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Generate nebula certificates
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
+  args:
+    apply:
+      delegate_to: localhost
+      delegate_facts: true
+
+- name: Copy nebula certificates to workers
+  copy:
+    src: "{{ toolkit_dir }}/nebula"
+    dest: /tmp/benchfaster/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+#TODO: this has to be fixed to actually replace the lighthouse address. also modify the config files
+#in core/nebula/config
+- name: Adjust nebula lighthouse address on workers
+  shell:
+    cmd: sed -i "s@192.168.50.99@192.168.50.{{ 98 + hostvars[groups["headnodes"][0]].cluster }}@g" /tmp/benchfaster/nebula/config/worker.yml
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Adjust nebula lighthouse address on workers
+  replace:
+    path: /tmp/benchfaster/nebula/config/worker.yml
+    regexp: '192.168.50.99'
+    replace: '192.168.50.{{ 98 + hostvars[groups["headnodes"][0]].cluster }}'
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Copy nebula certificates to headnode
+  copy:
+    src: "{{ toolkit_dir }}/nebula"
+    dest: /tmp/benchfaster/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+#TODO: check which of these files are actually necessary to be copied
+- name: Install Nebula on first headnode
+  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[groups['headnodes'][0]].arch }} lighthouse 127.0.0.99"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Install Nebula on other headnodes
+  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[current_host].arch }} {{ hostvars[current_host].inventory_hostname }} {{ headnodeip.stdout }}"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - current_host != groups['headnodes'][0]
+
+- name: Install Nebula on workers
+  ansible.builtin.script: "{{ toolkit_dir }}/nebula/nebula_install.sh {{ nebula.nebula_version }} /tmp {{ hostvars[current_host].arch }} {{ hostvars[current_host].inventory_hostname }} {{ headnodeip.stdout }}"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Deploy k3s cluster
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/k3s/k3s_multi_cluster.yml"
+
+- name: Apply netem to all nodes
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem-multi.yml"

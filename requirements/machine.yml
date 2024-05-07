@@ -8,6 +8,8 @@
         - curl
         - jq
         - wget
+        - git
+        - podman
         update_cache: no
         state: present
       become: true
@@ -19,6 +21,8 @@
           - curl
           - jq
           - wget
+          - git
+          - podman
         update_cache: no
         state: present
       become: true
