@@ -1,7 +1,7 @@
 - ansible.builtin.set_fact:
     netem: "{{ network.intra }}"
 
-- name: Apply netem set "{{ netem.name }}" (Machines)
+- name: Apply intra-cluster netem set "{{ netem.name }}" (Machines)
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_add.yml"
   args:
     apply:
@@ -10,7 +10,7 @@
   loop_control:
     loop_var: hitem
 
-- name: Apply netem set "{{ netem.name }}" (Headnode)
+- name: Apply intra-cluster netem set "{{ netem.name }}" (Headnode)
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_add.yml"
   args:
     apply:
@@ -20,7 +20,28 @@
     loop_var: hitem
 
 - ansible.builtin.set_fact:
-    netem: "{{ network.tm }}"
+    netem: "{{ network.inter }}"
+
+- ansible.builtin.set_fact:
+    netinterface: "nebula"
+
+- name: Apply inter-cluster netem set "{{ netem.name }}" (Machines)
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_add.yml"
+  args:
+    apply:
+      delegate_to: "{{ hitem }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: hitem
+
+- name: Apply inter-cluster netem set "{{ netem.name }}" (Headnode)
+  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_add.yml"
+  args:
+    apply:
+      delegate_to: "{{ hitem }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: hitem
 
 #- name: Apply netem set "{{ netem.name }}" (Testers)
 #  ansible.builtin.include_tasks: "{{ toolkit_dir }}/netem/netem_add.yml"

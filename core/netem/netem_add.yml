@@ -1,14 +1,14 @@
 - ansible.builtin.shell: |
     if [ $(echo "{{ netem.delay }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ netem.variance }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ netem.loss }} != 0" | bc -l) -eq 1 ]; then
-      tc qdisc add dev {{ hostvars[hitem].interface }} root netem delay {{ netem.delay }}ms {{ netem.variance }}ms distribution normal loss {{ netem.loss }}% 
+      tc qdisc add dev {{ netinterface | default(hostvars[hitem].interface) }} root netem delay {{ netem.delay }}ms {{ netem.variance }}ms distribution normal loss {{ netem.loss }}% 
       echo "Delay, variance and loss added!" 
     fi
     if [ $(echo "{{ netem.delay }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ netem.variance }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ netem.loss }} != 0" | bc -l) -eq 0 ]; then
-      tc qdisc add dev {{ hostvars[hitem].interface }} root netem delay {{ netem.delay }}ms {{ netem.variance }}ms
+      tc qdisc add dev {{ netinterface | default(hostvars[hitem].interface) }} root netem delay {{ netem.delay }}ms {{ netem.variance }}ms
       echo "Only delay and variance added!" >> {{ results_path.path }}/logs.txt
     fi
     if [ $(echo "{{ netem.delay }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ netem.variance }} != 0" | bc -l) -eq 0 ] && [ $(echo "{{ netem.loss }} != 0" | bc -l) -eq 0 ]; then
-      tc qdisc add dev {{ hostvars[hitem].interface }} root netem delay {{ netem.delay }}ms
+      tc qdisc add dev {{ netinterface | default(hostvars[hitem].interface) }} root netem delay {{ netem.delay }}ms
       echo "Only delay added!"
     else
       echo "No netem to apply"
