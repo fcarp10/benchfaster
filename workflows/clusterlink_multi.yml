@@ -2,9 +2,11 @@
     name: "{{ role_item }}"
   with_items:
     - benchfaster/start-multi-cluster
+#    - benchfaster/registry-add
     - applications/clusterlink
     - applications/{{ application }}
-#    - benchmark-tools/{{ benchmark_tool }}
+    - applications/knative/function-add
+    - applications/jmeter_kubernetes
     - benchfaster/stop
   loop_control:
     loop_var: role_item

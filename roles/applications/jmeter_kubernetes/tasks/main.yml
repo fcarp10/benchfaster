@@ -1,0 +1,388 @@
+---
+# tasks file for roles/applications/jmeter_kubernetes
+
+
+- name: Export hello-world service name on server
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: Export
+    metadata:
+      name: hello-world-00001-private
+      namespace: default
+    spec:
+      port: 80
+    " | kubectl apply -f -
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Export payload-echo service name on server
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: Export
+    metadata:
+      name: payload-echo-00001-private
+      namespace: default
+    spec:
+      port: 80
+    " | kubectl apply -f -
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Import hello-world service on clients
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: Import
+    metadata:
+      name: hello-world-00001-private
+      namespace: default
+    spec:
+      port: 80
+      sources:
+        - exportName: hello-world-00001-private
+          exportNamespace: default
+          peer: cluster{{  hostvars[groups['headnodes'][0]].cluster }}
+    " | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Import payload-echo service on clients
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: Import
+    metadata:
+      name: payload-echo-00001-private
+      namespace: default
+    spec:
+      port: 80
+      sources:
+        - exportName: payload-echo-00001-private
+          exportNamespace: default
+          peer: cluster{{  hostvars[groups['headnodes'][0]].cluster }}
+    " | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Allow all communication
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: AccessPolicy
+    metadata:
+      name: allow-policy
+      namespace: default
+    spec:
+      action: allow
+      from:
+      - workloadSelector: {}
+      to:
+      - workloadSelector: {}
+    " | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Wait for hello-world function pod to finish rollout
+  become: yes
+  shell: kubectl rollout status deployment hello-world-00001-deployment
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Wait for payload-echo function pod to finish rollout
+  become: yes
+  shell: kubectl rollout status deployment payload-echo-00001-deployment
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+#TODO: split this into separate benchmarking role and include remote benchmarking https://jmeter.apache.org/usermanual/get-started.html#non_gui
+- name: Copy .jmx files to worker nodes
+  copy:
+    src: "{{ playbook_dir }}/roles/benchmark-tools/jmeter/files/"
+    dest: /tmp/benchfaster/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Create jmeter benchmarking pod
+  become: yes
+  shell: |
+    echo "
+    apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      name: jmeter-data-volume
+      namespace: default
+      labels:
+        type: local
+    spec:
+      storageClassName: manual
+      capacity:
+        storage: 10Gi
+      accessModes:
+        - ReadWriteOnce
+      claimRef:
+         namespace: default
+         name: jmeter-data-claim
+      hostPath:
+        path: "/tmp/benchfaster"
+      nodeAffinity:
+        required:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: node-role.kubernetes.io/worker
+              operator: In
+              values:
+              - worker
+    ---
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: jmeter-data-claim
+      namespace: default
+    spec:
+      storageClassName: manual
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: benchmark-deployment
+      labels:
+        app: benchmark-pod
+    spec:
+      selector:
+        matchLabels:
+          app: benchmark-pod
+      template:
+        metadata:
+          labels:
+            app: benchmark-pod
+        spec:
+          nodeSelector:
+            node-role.kubernetes.io/worker: worker
+          containers:
+            - name: benchmark-pod
+              image: michalkeit/debian-benchmark:trixie-slim
+              imagePullPolicy: Always
+              command: ['/bin/sh', '-c', 'sleep infinity']
+              volumeMounts:
+                - mountPath: "/tmp/benchfaster"
+                  name: jmeter
+              resources:
+                limits:
+                  memory: "2Gi"
+                  cpu: "2000m"
+          volumes:
+            - name: jmeter
+              persistentVolumeClaim:
+                claimName: jmeter-data-claim
+          terminationGracePeriodSeconds: 0
+    " | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Wait for benchmark pod to become ready
+  become: yes
+  shell: kubectl rollout status deployment benchmark-deployment
+  retries: 10
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Test hello-world for functionality through clusterlink
+  become: yes
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- curl http://hello-world-00001-private
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Test payload-echo for functionality through clusterlink
+  become: yes
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- curl http://payload-echo-00001-private -d '{"test":"hello world!"}'
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- ansible.builtin.set_fact:
+    jmeter:
+      "{{ jmeter | default({}) | combine({'opt_param_key': ''}) }}"
+
+- ansible.builtin.set_fact:
+    jmeter:
+      "{{ jmeter | default({}) | combine({'opt_param_value': ''}) }}"
+
+- ansible.builtin.set_fact:
+    jmeter:
+      "{{ jmeter | default({}) | combine({'data_source': ''}) }}"
+
+- name: Run JMeter test against hello-world (clusterlink)
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/{{ jmeter.file }} \
+      -Jrequest.ip=hello-world-00001-private \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/helloworld_0_clusterlink_{{ network.name }}.csv
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+#TODO: fix the hardcoding in these tests
+- name: Run JMeter test against payload-echo (clusterlink)
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload.jmx \
+      -Jrequest.ip=payload-echo-00001-private \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jtest.opt={{ payloadSize }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/payload_{{ payloadSize }}_clusterlink_{{ network.name }}.csv
+  delegate_to: "{{ groups['headnodes'][1] }}"
+  loop:
+    - 1KB
+    - 10KB
+    - 100KB
+    - 1MB
+  loop_control:
+    loop_var: payloadSize
+
+- name: Test hello-world for functionality through external connection
+  become: yes
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- curl http://hello-world.default.{{ address_benchmark }}.nip.io
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Test payload-echo for functionality through external connection
+  become: yes
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- curl http://payload-echo.default.{{ address_benchmark }}.nip.io -d '{"test":"hello world!"}'
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Run JMeter test through direct, external connection agianst hello-world
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/{{ jmeter.file }} \
+      -Jrequest.ip=hello-world.default.{{ address_benchmark }}.nip.io \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/helloworld_0_direct_{{ network.name }}.csv
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Run JMeter test through direct, external connection agianst payload-echo
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload.jmx \
+      -Jrequest.ip=payload-echo.default.{{ address_benchmark }}.nip.io \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jtest.opt={{ payloadSize }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/payload_{{ payloadSize }}_direct_{{ network.name }}.csv
+  delegate_to: "{{ groups['headnodes'][1] }}"
+  loop:
+    - 1KB
+    - 10KB
+    - 100KB
+    - 1MB
+  loop_control:
+    loop_var: payloadSize
+
+#- name: Copy results to control node
+#  synchronize:
+#    src: "{{ results_path.path }}"
+#    dest: "{{ playbook_dir }}/_results/"
+#    mode: pull
+#  delegate_to: "{{ groups['workers'][1] }}"
+
+#- name: Set default root path for results when undefined
+#  ansible.builtin.set_fact:
+#    results_root: "{{ playbook_dir }}"
+#  when: results_root is undefined
+#
+#- name: Copy results to control node
+#  copy:
+#    src: "{{ results_path.path }}"
+#    dest: "{{ results_root }}/_results/"
+#    remote_src: true
+#  delegate_to: "{{ current_host }}"
+#  loop: "{{ groups['headnodes'] }}"
+#  loop_control:
+#    loop_var: current_host
+#  when:
+#    - "current_host != groups['headnodes'][0]"
+#
+#- name: echo results path
+#  debug:
+#    var: results_root
+#
+#- name: Fail intentionally
+#  become: yes
+#  shell: 
+#  delegate_to: "{{ groups['headnodes'][0] }}"

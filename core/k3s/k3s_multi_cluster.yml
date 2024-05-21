@@ -113,11 +113,46 @@
 
 - name: Install k3s on headnode
   ansible.builtin.shell: |
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.k3s_version }}" K3S_NODE_NAME="headnode-c{{ hostvars[headnode_item].cluster }}" INSTALL_K3S_EXEC="--config /tmp/k3s/config.yaml " sh -
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.k3s_version }}" K3S_NODE_NAME="headnode-c{{ hostvars[headnode_item].cluster }}" INSTALL_K3S_EXEC="--cluster-cidr 10.{{ 2 * hostvars[headnode_item].cluster + 42 }}.0.0/16 --service-cidr 10.{{ 2 * hostvars[headnode_item].cluster + 43 }}.0.0/16" sh -
   delegate_to: "{{ headnode_item }}"
   loop: "{{ groups['headnodes'] }}"
   loop_control:
     loop_var: headnode_item
+#For Canal installation, --flannel-backend=none --disable-network-policy is needed
+# Debug status: kubectl describe endpointslice on cluster2 should probably list the host names of
+# the pods, as described here: https://submariner.io/getting-started/quickstart/external/ and here: https://submariner.io/operations/troubleshooting/#check-endpointslice-resources
+
+#- name: Install Calico on headnode
+#  ansible.builtin.shell: |
+#    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
+#    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
+#  delegate_to: "{{ headnode_item }}"
+#  loop: "{{ groups['headnodes'] }}"
+#  loop_control:
+#    loop_var: headnode_item
+
+#- name: Check for all Calico pods to become ready
+#  ansible.builtin.shell: kubectl get pods -n calico-system
+#  become: yes
+#  register: result
+#  until: result.stdout.find("0/") == -1
+#  retries: 60
+#  delay: 5
+#  delegate_to: "{{ headnode_item }}"
+#  loop: "{{ groups['headnodes'] }}"
+#  loop_control:
+#    loop_var: headnode_item
+
+#- name: Install Canal on headnode
+#  ansible.builtin.shell: |
+#    curl https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/canal.yaml -O
+#    cat canal.yaml | sed 's@10.244.0.0/16@10.{{ 2 * hostvars[headnode_item].cluster + 42 }}.0.0/16@g' > /tmp/benchfaster/canal.yaml
+#    kubectl apply -f /tmp/benchfaster/canal.yaml
+#    kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+#  delegate_to: "{{ headnode_item }}"
+#  loop: "{{ groups['headnodes'] }}"
+#  loop_control:
+#    loop_var: headnode_item
 
 #- name: Call registration of token variables
 #  include_tasks: "{{ toolkit_dir }}/k3s/k3s_register_token.yml"
@@ -194,7 +229,7 @@
 
 - name: Install k3s on workers
   ansible.builtin.shell: |
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.k3s_version }}" K3S_NODE_NAME="{{ hostvars[current_host].inventory_hostname }}" K3S_URL="https://192.168.50.{{ 98 + hostvars[current_host].cluster }}:{{ k3s.k3s_port }}" K3S_TOKEN="{{ vars['k3s_token_c' ~ hostvars[current_host].cluster] }}" INSTALL_K3S_EXEC="--config /tmp/k3s/config.yaml" sh -
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.k3s_version }}" K3S_NODE_NAME="{{ hostvars[current_host].inventory_hostname }}" K3S_URL="https://192.168.50.{{ 98 + hostvars[current_host].cluster }}:{{ k3s.k3s_port }}" K3S_TOKEN="{{ vars['k3s_token_c' ~ hostvars[current_host].cluster] }}" sh -
   delegate_to: "{{ current_host }}"
   loop: "{{ groups['workers'] }}"
   loop_control:
@@ -205,8 +240,20 @@
   become: yes
   register: result
   until: result.stdout.find("NotReady") == -1
-  retries: 24
+  retries: 60
   delay: 5
+  delegate_to: "{{ headnode_item }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode_item
+
+- name: Label workers as such
+  ansible.builtin.shell: |
+    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    for worker in $(sudo -E kubectl get nodes | grep -v control-plane | grep -v NAME | sed 's/\s.*$//')
+    do
+      sudo -E kubectl label node $worker node-role.kubernetes.io/worker=worker
+    done
   delegate_to: "{{ headnode_item }}"
   loop: "{{ groups['headnodes'] }}"
   loop_control:

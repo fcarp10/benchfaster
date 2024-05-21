@@ -1,0 +1,140 @@
+- name: Hello-world playbook example for openfaas and jmeter
+  hosts: testers
+  vars:
+    application: knative/install
+    address_benchmark: 192.168.50.99
+    benchmark_tool: jmeter
+    jmeter: 
+      url: "hello-world-00001-private"
+      port: 80
+      path: /
+      file: hello-world.jmx
+      iterations: 20
+    functions: 
+      - hello-world-def
+      - payload-echo
+    registry: 
+      user: ubuntu
+      ip: 134.169.115.71
+      port: 5000
+      dname: local-registry
+    netem:
+      - name: edg5
+        intra:
+          delay: 1.25
+          variance: 0.25
+          loss: 0.02
+        inter:
+          delay: 1.25
+          variance: 0.25
+          loss: 0.02
+      - name: loc0
+        intra:
+          delay: 0
+          variance: 0
+          loss: 0
+        inter:
+          delay: 0
+          variance: 0
+          loss: 0
+      - name: edg10
+        intra:
+          delay: 2.5
+          variance: 0.5
+          loss: 0.04
+        inter:
+          delay: 2.5
+          variance: 0.5
+          loss: 0.04
+      - name: edg20
+        intra:
+          delay: 5
+          variance: 1
+          loss: 0.08
+        inter:
+          delay: 5
+          variance: 1
+          loss: 0.08
+      - name: edg30
+        intra:
+          delay: 7.5
+          variance: 1.5
+          loss: 0.12
+        inter:
+          delay: 7.5
+          variance: 1.5
+          loss: 0.12
+#      - name: edg40
+#        intra:
+#          delay: 10
+#          variance: 2
+#          loss: 0.16
+#        inter:
+#          delay: 10
+#          variance: 2
+#          loss: 0.16
+      - name: cld5
+        intra:
+          delay: 0
+          variance: 0
+          loss: 0
+        inter:
+          delay: 2.5
+          variance: 0.5
+          loss: 0.04
+      - name: cld10
+        intra:
+          delay: 0
+          variance: 0
+          loss: 0
+        inter:
+          delay: 5
+          variance: 1
+          loss: 0.08
+      - name: cld20
+        intra:
+          delay: 0
+          variance: 0
+          loss: 0
+        inter:
+          delay: 10
+          variance: 2
+          loss: 0.16
+      - name: cld30
+        intra:
+          delay: 0
+          variance: 0
+          loss: 0
+        inter:
+          delay: 15
+          variance: 3
+          loss: 0.24
+#      - name: cld40
+#        intra:
+#          delay: 0
+#          variance: 0
+#          loss: 0
+#        inter:
+#          delay: 20
+#          variance: 4
+#          loss: 0.32
+
+      
+  tasks:
+    - ansible.builtin.include_role: 
+        name: benchfaster/init
+
+    - name: Launch jmeter workflow
+      ansible.builtin.include_tasks: workflows/clusterlink_multi.yml
+      vars:
+        - network: "{{ pb_item }}"
+      loop: "{{ netem | list }}"
+      loop_control:
+        loop_var: pb_item
+    
+- name:
+#  hosts: groups['headnodes'][1]
+  hosts: groups['workers'][1]
+  tasks:
+    - ansible.builtin.include_role: 
+        name: benchfaster/finish

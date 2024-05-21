@@ -7,7 +7,7 @@
         delay: "{{ net_item.1 | default('0') }}"
         variance: "{{ net_item.2 | default('0') }}"
         loss: "{{ net_item.3 | default('0') }}"
-      tm:
+      inter:
         name: "{{ net_item.4 | default('0-tm') }}"
         delay: "{{ net_item.5 | default('0') }}"
         variance: "{{ net_item.6 | default('0') }}"
@@ -120,22 +120,6 @@
   when:
     - "'hypervisors' in groups"
     - "hostvars[headnode_item].headnode is defined"
-
-- name: DEBUG Echo hostname in cluster1 group
-  shell: |
-    hostnamectl
-  delegate_to: "{{ current_host }}"
-  loop: "{{ groups['cluster1'] }}"
-  loop_control:
-    loop_var: current_host
-
-- name: DEBUG Echo hostname in cluster2 group
-  shell: |
-    hostnamectl
-  delegate_to: "{{ current_host }}"
-  loop: "{{ groups['cluster2'] }}"
-  loop_control:
-    loop_var: current_host
 
 - name: Generate nebula certificates
   ansible.builtin.include_tasks: "{{ toolkit_dir }}/nebula/nebula_certs.yml"
