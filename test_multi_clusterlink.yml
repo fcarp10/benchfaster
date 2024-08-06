@@ -19,15 +19,6 @@
       port: 5000
       dname: local-registry
     netem:
-      - name: edg5
-        intra:
-          delay: 1.25
-          variance: 0.25
-          loss: 0.02
-        inter:
-          delay: 1.25
-          variance: 0.25
-          loss: 0.02
       - name: loc0
         intra:
           delay: 0
@@ -37,6 +28,15 @@
           delay: 0
           variance: 0
           loss: 0
+      - name: edg5
+        intra:
+          delay: 1.25
+          variance: 0.25
+          loss: 0.02
+        inter:
+          delay: 1.25
+          variance: 0.25
+          loss: 0.02
       - name: edg10
         intra:
           delay: 2.5

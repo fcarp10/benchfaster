@@ -9,3 +9,5 @@ registry:
   ip: 
   port:
   dname:
+clusterlink:
+  version: v0.4.0

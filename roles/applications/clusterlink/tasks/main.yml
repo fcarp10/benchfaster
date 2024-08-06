@@ -32,12 +32,12 @@
 
 - name: Clone clusterlink to localhost
   shell:
-    cmd: git clone https://github.com/clusterlink-net/clusterlink.git /tmp/benchfaster/clusterlink
+    cmd: git clone --depth 1 --branch "{{ clusterlink.version }}" https://github.com/clusterlink-net/clusterlink.git /tmp/benchfaster/clusterlink
   delegate_to: localhost
 
 - name: Clone clusterlink to all headnodes
   shell:
-    cmd: git clone https://github.com/clusterlink-net/clusterlink.git /tmp/benchfaster/clusterlink
+    cmd: git clone --depth 1 --branch "{{ clusterlink.version }}" https://github.com/clusterlink-net/clusterlink.git /tmp/benchfaster/clusterlink
   delegate_to: "{{ headnode }}"
   loop: "{{ groups['headnodes'] }}"
   loop_control:
@@ -79,7 +79,7 @@
 - name: Compile clusterlink on localhost
   shell: |
     cd /tmp/benchfaster/clusterlink
-    docker create --name builder docker.io/michalkeit/clusterlink:latest
+    docker create --name builder docker.io/michalkeit/clusterlink:"{{ clusterlink.version }}"
     docker cp builder:/app/bin/clusterlink ./bin/
     docker rm -f builder
   delegate_to: localhost
@@ -87,7 +87,7 @@
 - name: Compile clusterlink on all headnodes
   shell: |
     cd /tmp/benchfaster/clusterlink
-    podman create --name builder docker.io/michalkeit/clusterlink:latest
+    podman create --name builder docker.io/michalkeit/clusterlink:"{{ clusterlink.version }}"
     podman cp builder:/app/bin/clusterlink ./bin/
     podman rm -f builder
   delegate_to: "{{ headnode }}"

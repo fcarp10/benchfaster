@@ -215,6 +215,12 @@
   when:
     - "current_host != groups['headnodes'][0]"
 
+- name: log the current latency to the nebula lighthouse
+  become: yes
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- bash -c "/usr/bin/ping -c 4 {{ address_benchmark }} | tee {{ results_path.path }}/latency_nebula_{{ network.name }}.chk"
+  delegate_to: "{{ groups['headnodes'][1] }}"
+
 - name: Test hello-world for functionality through clusterlink
   become: yes
   shell: |
@@ -255,7 +261,7 @@
 
 - name: Run JMeter test against hello-world (clusterlink)
   shell: |
-    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/{{ jmeter.file }} \
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/hello-world-reuse.jmx \
       -Jrequest.ip=hello-world-00001-private \
       -Jrequest.port={{ jmeter.port }} \
       -Jrequest.path={{ jmeter.path }} \
@@ -273,7 +279,7 @@
 #TODO: fix the hardcoding in these tests
 - name: Run JMeter test against payload-echo (clusterlink)
   shell: |
-    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload.jmx \
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
       -Jrequest.ip=payload-echo-00001-private \
       -Jrequest.port={{ jmeter.port }} \
       -Jrequest.path={{ jmeter.path }} \
@@ -319,7 +325,7 @@
 
 - name: Run JMeter test through direct, external connection agianst hello-world
   shell: |
-    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/{{ jmeter.file }} \
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/hello-world-reuse.jmx \
       -Jrequest.ip=hello-world.default.{{ address_benchmark }}.nip.io \
       -Jrequest.port={{ jmeter.port }} \
       -Jrequest.path={{ jmeter.path }} \
@@ -336,7 +342,7 @@
 
 - name: Run JMeter test through direct, external connection agianst payload-echo
   shell: |
-    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload.jmx \
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
       -Jrequest.ip=payload-echo.default.{{ address_benchmark }}.nip.io \
       -Jrequest.port={{ jmeter.port }} \
       -Jrequest.path={{ jmeter.path }} \
