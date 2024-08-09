@@ -6,7 +6,7 @@
     - applications/clusterlink
     - applications/{{ application }}
     - applications/knative/function-add
-    - applications/jmeter_kubernetes
+    - applications/jmeter_kubernetes_clusterlink
     - benchfaster/stop
   loop_control:
     loop_var: role_item
