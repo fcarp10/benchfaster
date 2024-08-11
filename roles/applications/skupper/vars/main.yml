@@ -1,0 +1,4 @@
+---
+# vars file for roles/applications/skupper
+skupper:
+  version: 1.7.3
