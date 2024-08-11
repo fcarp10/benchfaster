@@ -118,6 +118,8 @@
   loop: "{{ groups['headnodes'] }}"
   loop_control:
     loop_var: headnode_item
+# --bind-address 192.168.50.{{ 98 + hostvars[headnode_item].cluster }}
+#
 #For Canal installation, --flannel-backend=none --disable-network-policy is needed
 # Debug status: kubectl describe endpointslice on cluster2 should probably list the host names of
 # the pods, as described here: https://submariner.io/getting-started/quickstart/external/ and here: https://submariner.io/operations/troubleshooting/#check-endpointslice-resources

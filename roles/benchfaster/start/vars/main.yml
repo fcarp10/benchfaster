@@ -1,7 +1,7 @@
 ---
 # vars file for core
 nebula: 
-  nebula_version: 1.5.2
+  nebula_version: 1.9.3
   nebula_address: lighthouse
   nebula_port: 4242
 k3s: 

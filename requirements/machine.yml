@@ -5,6 +5,9 @@
     - name: Install requirements (Ubuntu 22.04)
       ansible.builtin.apt:
         pkg:
+        - bc
+        - rsync
+        - sudo
         - curl
         - jq
         - wget
@@ -13,7 +16,7 @@
         update_cache: no
         state: present
       become: true
-      when: ansible_facts['distribution']=="Ubuntu"
+      when: ansible_facts['distribution']=="Ubuntu" or ansible_facts['distribution']=="Debian"
 
     - name: Install requirements (Archlinux) 
       community.general.pacman:
