@@ -1,6 +1,9 @@
 ---
 # tasks file for roles/applications/jmeter_kubernetes
 
+- name: Define payload values
+  set_fact:
+    payloadValues: ["60B","1KB","2KB","10KB","100KB","1MB"]
 
 - name: Export hello-world service name on server
   become: yes
@@ -10,6 +13,20 @@
     kind: Export
     metadata:
       name: hello-world-00001-private
+      namespace: default
+    spec:
+      port: 80
+    " | kubectl apply -f -
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Export payload-recv service name on server
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: Export
+    metadata:
+      name: payload-recv-00001-private
       namespace: default
     spec:
       port: 80
@@ -43,6 +60,29 @@
       port: 80
       sources:
         - exportName: hello-world-00001-private
+          exportNamespace: default
+          peer: cluster{{  hostvars[groups['headnodes'][0]].cluster }}
+    " | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Import payload-recv service on clients
+  become: yes
+  shell: |
+    echo "
+    apiVersion: clusterlink.net/v1alpha1
+    kind: Import
+    metadata:
+      name: payload-recv-00001-private
+      namespace: default
+    spec:
+      port: 80
+      sources:
+        - exportName: payload-recv-00001-private
           exportNamespace: default
           peer: cluster{{  hostvars[groups['headnodes'][0]].cluster }}
     " | kubectl apply -f -
@@ -100,6 +140,11 @@
 - name: Wait for hello-world function pod to finish rollout
   become: yes
   shell: kubectl rollout status deployment hello-world-00001-deployment
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Wait for payload-recv function pod to finish rollout
+  become: yes
+  shell: kubectl rollout status deployment payload-recv-00001-deployment
   delegate_to: "{{ groups['headnodes'][0] }}"
 
 - name: Wait for payload-echo function pod to finish rollout
@@ -234,6 +279,19 @@
   when:
     - "current_host != groups['headnodes'][0]"
 
+- name: Test payload-recv for functionality through clusterlink
+  become: yes
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- curl http://payload-recv-00001-private -d '{"test":"hello world!"}'
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
 - name: Test payload-echo for functionality through clusterlink
   become: yes
   shell: |
@@ -277,6 +335,22 @@
     - "current_host != groups['headnodes'][0]"
 
 #TODO: fix the hardcoding in these tests
+- name: Run JMeter test against payload-recv (clusterlink)
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
+      -Jrequest.ip=payload-recv-00001-private \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jtest.opt={{ payloadSize }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/payloadrecv_{{ payloadSize }}_clusterlink_{{ network.name }}.csv
+  delegate_to: "{{ groups['headnodes'][1] }}"
+  loop: "{{ payloadValues }}"
+  loop_control:
+    loop_var: payloadSize
+
 - name: Run JMeter test against payload-echo (clusterlink)
   shell: |
     kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
@@ -287,13 +361,9 @@
       -Jtest.data_source={{ jmeter.data_source }} \
       -Jtest.opt={{ payloadSize }} \
       -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
-      -l {{ results_path.path }}/payload_{{ payloadSize }}_clusterlink_{{ network.name }}.csv
+      -l {{ results_path.path }}/payloadecho_{{ payloadSize }}_clusterlink_{{ network.name }}.csv
   delegate_to: "{{ groups['headnodes'][1] }}"
-  loop:
-    - 1KB
-    - 10KB
-    - 100KB
-    - 1MB
+  loop: "{{ payloadValues }}"
   loop_control:
     loop_var: payloadSize
 
@@ -309,6 +379,7 @@
     loop_var: current_host
   when:
     - "current_host != groups['headnodes'][0]"
+    - "directbenchmark | bool"
 
 - name: Test payload-echo for functionality through external connection
   become: yes
@@ -322,6 +393,7 @@
     loop_var: current_host
   when:
     - "current_host != groups['headnodes'][0]"
+    - "directbenchmark | bool"
 
 - name: Run JMeter test through direct, external connection agianst hello-world
   shell: |
@@ -339,6 +411,7 @@
     loop_var: current_host
   when:
     - "current_host != groups['headnodes'][0]"
+    - "directbenchmark | bool"
 
 - name: Run JMeter test through direct, external connection agianst payload-echo
   shell: |
@@ -352,13 +425,11 @@
       -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
       -l {{ results_path.path }}/payload_{{ payloadSize }}_direct_{{ network.name }}.csv
   delegate_to: "{{ groups['headnodes'][1] }}"
-  loop:
-    - 1KB
-    - 10KB
-    - 100KB
-    - 1MB
+  loop: "{{ payloadValues }}"
   loop_control:
     loop_var: payloadSize
+  when:
+    - "directbenchmark | bool"
 
 #- name: Copy results to control node
 #  synchronize:

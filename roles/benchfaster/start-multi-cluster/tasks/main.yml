@@ -17,7 +17,9 @@
 - name: Set group for workers
   add_host:
     name: "{{ node_item }}"
-    groups: workers
+    groups: 
+    - workers
+    - allnodes
   delegate_to: "{{ node_item }}"
   loop: "{{ groups['machines'] }}"
   loop_control:
@@ -26,6 +28,16 @@
     - "'hypervisors' not in groups"
     - "hostvars[node_item].headnode is not defined"
     - "hostvars[node_item].inventory_hostname not in groups['testers']"
+
+#- name: Reboot workers
+#  ansible.builtin.reboot:
+#    reboot_timeout: 3600
+#  delegate_to: "{{ node_item }}"
+#  loop: "{{ groups['workers'] }}"
+#  loop_control:
+#    loop_var: node_item
+#  when:
+#    - "'hypervisors' not in groups"
 
 - name: Set group for workers
   add_host:
@@ -42,7 +54,9 @@
 - name: Set group for headnode
   add_host:
     name: "{{ node_item }}"
-    groups: headnodes
+    groups: 
+    - headnodes
+    - allnodes
   delegate_to: "{{ node_item }}"
   loop: "{{ groups['machines'] }}"
   loop_control:

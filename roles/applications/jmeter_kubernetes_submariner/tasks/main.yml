@@ -1,11 +1,21 @@
 ---
 # tasks file for roles/applications/jmeter_kubernetes
 
+- name: Define payload values
+  set_fact: 
+    payloadValues: ["60B","1KB","2KB","10KB","100KB","1MB"]
+#    payloadValues: ["60B","1KB","2KB","10KB","100KB","1MB","5MB","11.7MB","25MB"]
 
 - name: Export hello-world service name on server
   become: yes
   shell:
     cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/submariner/bin/subctl export service --namespace default hello-world-00001-private"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Export payload-recv service name on server
+  become: yes
+  shell:
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/submariner/bin/subctl export service --namespace default payload-recv-00001-private"
   delegate_to: "{{ groups['headnodes'][0] }}"
 
 - name: Export payload-echo service name on server
@@ -17,6 +27,11 @@
 - name: Wait for hello-world function pod to finish rollout
   become: yes
   shell: kubectl rollout status deployment hello-world-00001-deployment
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Wait for payload-recv function pod to finish rollout
+  become: yes
+  shell: kubectl rollout status deployment payload-recv-00001-deployment
   delegate_to: "{{ groups['headnodes'][0] }}"
 
 - name: Wait for payload-echo function pod to finish rollout
@@ -151,6 +166,19 @@
   when:
     - "current_host != groups['headnodes'][0]"
 
+- name: Test payload-recv for functionality through submariner
+  become: yes
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- curl http://payload-recv-00001-private.default.svc.clusterset.local -d '{"test":"hello world!"}'
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
 - name: Test payload-echo for functionality through submariner
   become: yes
   shell: |
@@ -194,6 +222,22 @@
     - "current_host != groups['headnodes'][0]"
 
 #TODO: fix the hardcoding in these tests
+- name: Run JMeter test against payload-recv (submariner)
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
+      -Jrequest.ip=payload-recv-00001-private.default.svc.clusterset.local \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jtest.opt={{ payloadSize }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/payloadrecv_{{ payloadSize }}_submariner_{{ network.name }}.csv
+  delegate_to: "{{ groups['headnodes'][1] }}"
+  loop: "{{ payloadValues }}"
+  loop_control:
+    loop_var: payloadSize
+
 - name: Run JMeter test against payload-echo (submariner)
   shell: |
     kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
@@ -204,13 +248,9 @@
       -Jtest.data_source={{ jmeter.data_source }} \
       -Jtest.opt={{ payloadSize }} \
       -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
-      -l {{ results_path.path }}/payload_{{ payloadSize }}_submariner_{{ network.name }}.csv
+      -l {{ results_path.path }}/payloadecho_{{ payloadSize }}_submariner_{{ network.name }}.csv
   delegate_to: "{{ groups['headnodes'][1] }}"
-  loop:
-    - 1KB
-    - 10KB
-    - 100KB
-    - 1MB
+  loop: "{{ payloadValues }}"
   loop_control:
     loop_var: payloadSize
 
@@ -218,6 +258,19 @@
   become: yes
   shell: |
     kubectl exec -i deploy/benchmark-deployment -- curl http://hello-world.default.{{ address_benchmark }}.nip.io
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Test payload-recv for functionality through external connection
+  become: yes
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- curl http://payload-recv.default.{{ address_benchmark }}.nip.io -d '{"test":"hello world!"}'
   retries: 3
   delay: 5
   delegate_to: "{{ current_host }}"
@@ -256,8 +309,27 @@
     loop_var: current_host
   when:
     - "current_host != groups['headnodes'][0]"
+    - "directbenchmark | bool"
 
-- name: Run JMeter test through direct, external connection agianst payload-echo
+- name: Run JMeter test through direct, external connection against payload-recv
+  shell: |
+    kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
+      -Jrequest.ip=payload-recv.default.{{ address_benchmark }}.nip.io \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jtest.opt={{ payloadSize }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/payloadrecv_{{ payloadSize }}_direct_{{ network.name }}.csv
+  delegate_to: "{{ groups['headnodes'][1] }}"
+  loop: "{{ payloadValues }}"
+  loop_control:
+    loop_var: payloadSize
+  when:
+    - "directbenchmark | bool" 
+
+- name: Run JMeter test through direct, external connection against payload-echo
   shell: |
     kubectl exec -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
       -Jrequest.ip=payload-echo.default.{{ address_benchmark }}.nip.io \
@@ -267,15 +339,13 @@
       -Jtest.data_source={{ jmeter.data_source }} \
       -Jtest.opt={{ payloadSize }} \
       -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
-      -l {{ results_path.path }}/payload_{{ payloadSize }}_direct_{{ network.name }}.csv
+      -l {{ results_path.path }}/payloadecho_{{ payloadSize }}_direct_{{ network.name }}.csv
   delegate_to: "{{ groups['headnodes'][1] }}"
-  loop:
-    - 1KB
-    - 10KB
-    - 100KB
-    - 1MB
+  loop: "{{ payloadValues }}"
   loop_control:
     loop_var: payloadSize
+  when:
+    - "directbenchmark | bool" 
 
 #- name: Copy results to control node
 #  synchronize:

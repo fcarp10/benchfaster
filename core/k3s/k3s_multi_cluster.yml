@@ -114,6 +114,7 @@
 - name: Install k3s on headnode
   ansible.builtin.shell: |
     curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.k3s_version }}" K3S_NODE_NAME="headnode-c{{ hostvars[headnode_item].cluster }}" INSTALL_K3S_EXEC="--cluster-cidr 10.{{ 2 * hostvars[headnode_item].cluster + 42 }}.0.0/16 --service-cidr 10.{{ 2 * hostvars[headnode_item].cluster + 43 }}.0.0/16" sh -
+# --flannel-backend wireguard-native
   delegate_to: "{{ headnode_item }}"
   loop: "{{ groups['headnodes'] }}"
   loop_control:

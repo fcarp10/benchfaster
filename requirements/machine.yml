@@ -10,9 +10,11 @@
         - sudo
         - curl
         - jq
+        - libreswan
         - wget
         - git
         - podman
+        - wireguard
         update_cache: no
         state: present
       become: true

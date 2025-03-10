@@ -1,19 +1,21 @@
-- name: Get network interfaces
-  become: yes
-  command: ls /sys/class/net
-  register: networkinterfaces
+#- name: Get network interfaces
+#  become: yes
+#  command: ls /sys/class/net
+#  register: networkinterfaces
 
 - name: Delete netem
-  ansible.builtin.command: tc qdisc delete dev "{{ item }}" root
+#  ansible.builtin.command: tc qdisc delete dev "{{ item }}" root
+  ansible.builtin.command: tc qdisc delete dev "{{ netinterface | default(hostvars[hitem].interface) }}" root
   become: yes
   ignore_errors: yes
-  loop: "{{ networkinterfaces.stdout_lines }}"
+#  loop: "{{ networkinterfaces.stdout_lines }}"
 
 - name: Replace netem with sane default
-  ansible.builtin.command: tc qdisc replace dev "{{ item }}" root fq
+#  ansible.builtin.command: tc qdisc replace dev "{{ item }}" root fq
+  ansible.builtin.command: tc qdisc replace dev "{{ netinterface | default(hostvars[hitem].interface) }}" root fq
   become: yes
   ignore_errors: yes
-  loop: "{{ networkinterfaces.stdout_lines }}"
+#  loop: "{{ networkinterfaces.stdout_lines }}"
 
 - ansible.builtin.shell: |
     if [ $(echo "{{ netem.delay }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ netem.variance }} != 0" | bc -l) -eq 1 ] && [ $(echo "{{ netem.loss }} != 0" | bc -l) -eq 1 ]; then

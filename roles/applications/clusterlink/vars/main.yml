@@ -1,13 +1,4 @@
 ---
 # vars file for roles/applications/openfaas
-openfaas:
-  openfaas_version: 14.0.5
-  openfaas_port: 31112
-  openfaas_namespace: openfaas-fn
-registry:
-  user:
-  ip: 
-  port:
-  dname:
 clusterlink:
   version: v0.4.0

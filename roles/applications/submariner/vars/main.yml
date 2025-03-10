@@ -5,3 +5,6 @@ submariner:
   submariner_namespace: submariner-operator
   broker_namespace: submariner-broker
   version: 0.18.0
+#  cabledriver: vxlan
+  cabledriver: libreswan
+#  cabledriver: wireguard

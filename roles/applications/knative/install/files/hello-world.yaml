@@ -11,6 +11,6 @@ spec:
     spec:
       containerConcurrency: 1
       containers:
-        - image: fcarp10/hello-world:latest
+        - image: michalkeit/static-reply:1k
           ports:
             - containerPort: 80
