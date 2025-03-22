@@ -1,0 +1,381 @@
+---
+# tasks file for roles/applications/jmeter_kubernetes
+
+- name: Define payload values
+  set_fact:
+    payloadValues: ["60B","1KB","2KB","10KB","100KB","1MB"]
+
+- name: Export hello-world service name on server
+  become: yes
+  shell:
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/skupper/skupper expose service --namespace skupper hello-world-00001-private.default --address hello-world-00001-private-skupper --port 80"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Export payload-recv service name on server
+  become: yes
+  shell:
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/skupper/skupper expose service --namespace skupper payload-recv-00001-private.default --address payload-recv-00001-private-skupper --port 80"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Export payload-echo service name on server
+  become: yes
+  shell:
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/skupper/skupper expose service --namespace skupper payload-echo-00001-private.default --address payload-echo-00001-private-skupper --port 80"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Wait for hello-world function pod to finish rollout
+  become: yes
+  shell: kubectl rollout status deployment hello-world-00001-deployment
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Wait for payload-recv function pod to finish rollout
+  become: yes
+  shell: kubectl rollout status deployment payload-recv-00001-deployment
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Wait for payload-echo function pod to finish rollout
+  become: yes
+  shell: kubectl rollout status deployment payload-echo-00001-deployment
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+#TODO: split this into separate benchmarking role and include remote benchmarking https://jmeter.apache.org/usermanual/get-started.html#non_gui
+- name: Copy .jmx files to worker nodes
+  copy:
+    src: "{{ playbook_dir }}/roles/benchmark-tools/jmeter/files/"
+    dest: /tmp/benchfaster/
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Create jmeter benchmarking pod
+  become: yes
+  shell: |
+    echo "
+    apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      name: jmeter-data-volume
+      namespace: skupper
+      labels:
+        type: local
+    spec:
+      storageClassName: manual
+      capacity:
+        storage: 10Gi
+      accessModes:
+        - ReadWriteOnce
+      claimRef:
+         namespace: skupper
+         name: jmeter-data-claim
+      hostPath:
+        path: "/tmp/benchfaster"
+      nodeAffinity:
+        required:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: node-role.kubernetes.io/worker
+              operator: In
+              values:
+              - worker
+    ---
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: jmeter-data-claim
+      namespace: skupper
+    spec:
+      storageClassName: manual
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: benchmark-deployment
+      namespace: skupper
+      labels:
+        app: benchmark-pod
+    spec:
+      selector:
+        matchLabels:
+          app: benchmark-pod
+      template:
+        metadata:
+          labels:
+            app: benchmark-pod
+        spec:
+          nodeSelector:
+            node-role.kubernetes.io/worker: worker
+          containers:
+            - name: benchmark-pod
+              image: michalkeit/debian-benchmark:trixie-slim
+              imagePullPolicy: Always
+              command: ['/bin/sh', '-c', 'sleep infinity']
+              volumeMounts:
+                - mountPath: "/tmp/benchfaster"
+                  name: jmeter
+              resources:
+                limits:
+                  memory: "2Gi"
+                  cpu: "2000m"
+          volumes:
+            - name: jmeter
+              persistentVolumeClaim:
+                claimName: jmeter-data-claim
+          terminationGracePeriodSeconds: 0
+    " | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Wait for benchmark pod to become ready
+  become: yes
+  shell: kubectl -n skupper rollout status deployment benchmark-deployment
+  retries: 10
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: log the current latency to the nebula lighthouse
+  become: yes
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- bash -c "/usr/bin/ping -c 4 {{ address_benchmark }} | tee {{ results_path.path }}/latency_nebula_{{ network.name }}.chk"
+  delegate_to: "{{ groups['headnodes'][1] }}"
+
+- name: Test hello-world for functionality through skupper
+  become: yes
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- curl http://hello-world-00001-private-skupper
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Test payload-recv for functionality through skupper
+  become: yes
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- curl http://payload-recv-00001-private-skupper -d '{"test":"hello world!"}'
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Test payload-echo for functionality through skupper
+  become: yes
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- curl http://payload-echo-00001-private-skupper -d '{"test":"hello world!"}'
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- ansible.builtin.set_fact:
+    jmeter:
+      "{{ jmeter | default({}) | combine({'opt_param_key': ''}) }}"
+
+- ansible.builtin.set_fact:
+    jmeter:
+      "{{ jmeter | default({}) | combine({'opt_param_value': ''}) }}"
+
+- ansible.builtin.set_fact:
+    jmeter:
+      "{{ jmeter | default({}) | combine({'data_source': ''}) }}"
+
+- name: Run JMeter test against hello-world (skupper)
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/hello-world-reuse.jmx \
+      -Jrequest.ip=hello-world-00001-private-skupper \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/helloworld_0_skupper_{{ network.name }}.csv
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+#TODO: fix the hardcoding in these tests
+- name: Run JMeter test against payload-recv (skupper)
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
+      -Jrequest.ip=payload-recv-00001-private-skupper \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jtest.opt={{ payloadSize }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/payloadrecv_{{ payloadSize }}_skupper_{{ network.name }}.csv
+  delegate_to: "{{ groups['headnodes'][1] }}"
+  loop: "{{ payloadValues }}"
+  loop_control:
+    loop_var: payloadSize
+
+- name: Run JMeter test against payload-echo (skupper)
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
+      -Jrequest.ip=payload-echo-00001-private-skupper \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jtest.opt={{ payloadSize }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/payloadecho_{{ payloadSize }}_skupper_{{ network.name }}.csv
+  delegate_to: "{{ groups['headnodes'][1] }}"
+  loop: "{{ payloadValues }}"
+  loop_control:
+    loop_var: payloadSize
+
+- name: Test hello-world for functionality through external connection
+  become: yes
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- curl http://hello-world.default.{{ address_benchmark }}.nip.io
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Test payload-recv for functionality through external connection
+  become: yes
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- curl http://payload-recv.default.{{ address_benchmark }}.nip.io -d '{"test":"hello world!"}'
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Test payload-echo for functionality through external connection
+  become: yes
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- curl http://payload-echo.default.{{ address_benchmark }}.nip.io -d '{"test":"hello world!"}'
+  retries: 3
+  delay: 5
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+
+- name: Run JMeter test through direct, external connection agianst hello-world
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/hello-world-reuse.jmx \
+      -Jrequest.ip=hello-world.default.{{ address_benchmark }}.nip.io \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/helloworld_0_direct_{{ network.name }}.csv
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "current_host != groups['headnodes'][0]"
+    - "directbenchmark | bool"
+
+- name: Run JMeter test through direct, external connection agianst payload-recv
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
+      -Jrequest.ip=payload-recv.default.{{ address_benchmark }}.nip.io \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jtest.opt={{ payloadSize }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/payloadrecv_{{ payloadSize }}_direct_{{ network.name }}.csv
+  delegate_to: "{{ groups['headnodes'][1] }}"
+  loop: "{{ payloadValues }}"
+  loop_control:
+    loop_var: payloadSize
+  when:
+    - "directbenchmark | bool" 
+
+- name: Run JMeter test through direct, external connection agianst payload-echo
+  shell: |
+    kubectl exec -n skupper -i deploy/benchmark-deployment -- /usr/share/jmeter/bin/jmeter -n -t /tmp/benchfaster/payload-reuse.jmx \
+      -Jrequest.ip=payload-echo.default.{{ address_benchmark }}.nip.io \
+      -Jrequest.port={{ jmeter.port }} \
+      -Jrequest.path={{ jmeter.path }} \
+      -Jtest.iterations={{ jmeter.iterations }} \
+      -Jtest.data_source={{ jmeter.data_source }} \
+      -Jtest.opt={{ payloadSize }} \
+      -Jrequest.{{ jmeter.opt_param_key }}={{ jmeter.opt_param_value }} \
+      -l {{ results_path.path }}/payloadecho_{{ payloadSize }}_direct_{{ network.name }}.csv
+  delegate_to: "{{ groups['headnodes'][1] }}"
+  loop: "{{ payloadValues }}"
+  loop_control:
+    loop_var: payloadSize
+  when:
+    - "directbenchmark | bool" 
+
+#- name: Copy results to control node
+#  synchronize:
+#    src: "{{ results_path.path }}"
+#    dest: "{{ playbook_dir }}/_results/"
+#    mode: pull
+#  delegate_to: "{{ groups['workers'][1] }}"
+
+#- name: Set default root path for results when undefined
+#  ansible.builtin.set_fact:
+#    results_root: "{{ playbook_dir }}"
+#  when: results_root is undefined
+#
+#- name: Copy results to control node
+#  copy:
+#    src: "{{ results_path.path }}"
+#    dest: "{{ results_root }}/_results/"
+#    remote_src: true
+#  delegate_to: "{{ current_host }}"
+#  loop: "{{ groups['headnodes'] }}"
+#  loop_control:
+#    loop_var: current_host
+#  when:
+#    - "current_host != groups['headnodes'][0]"
+#
+#- name: echo results path
+#  debug:
+#    var: results_root
+#
+#- name: Fail intentionally
+#  become: yes
+#  shell: 
+#  delegate_to: "{{ groups['headnodes'][0] }}"

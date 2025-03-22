@@ -1,0 +1,52 @@
+- hosts: testers
+  vars:
+    hey: 
+      url: "sleep-fn.functions.{{ address_benchmark }}.nip.io"
+      port: 80
+      path: /
+      payload_set: [1, 2, 4, 8, 16, 32, 64]
+      num_clients_set: [500, 50, 1]
+      duration: 5m
+    functions: 
+      - fn-namespace
+      - sleep-fn
+    network_sets:
+      name: [ ms4, ms3, ms2, ms1, ss7, ss6, ss5, ss4, ss3, ss2, ss1, loc]
+      intra:
+        delay: [ 25, 12.5, 6.25, 3.125, 0, 0, 0, 0, 0, 0, 0, 0]
+        variance: "{{ [0] * 15 }}"
+        loss: "{{ [0] *  15  }}"
+      tm:
+        delay: [ 25, 12.5, 6.25, 3.125, 800, 400, 200, 100, 50, 25, 12.5, 0]
+        variance: "{{ [0] * 15  }}"
+        loss: "{{ [0] *  15  }}"
+    registry: 
+      user: ubuntu
+      ip: 134.169.115.71
+      port: 5000
+      dname: local-registry
+  
+  tasks:
+    - ansible.builtin.include_role: 
+        name: benchfaster/init
+
+    - name: Launch workflow
+      ansible.builtin.include_tasks: workflows/knative_hey_scalability/main.yml
+      with_together:
+        - "{{ network_sets.name }}"
+        - "{{ network_sets.intra.delay }}"
+        - "{{ network_sets.intra.variance }}"
+        - "{{ network_sets.intra.loss }}"
+        - "{{ network_sets.name }}"
+        - "{{ network_sets.tm.delay }}"
+        - "{{ network_sets.tm.variance }}"
+        - "{{ network_sets.tm.loss }}"
+      loop_control:
+        loop_var: net_item
+
+    - ansible.builtin.include_role:
+        name: benchfaster/finish
+      vars:
+        - results_path_control: "{{ playbook_dir }}"
+
+

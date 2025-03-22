@@ -1,9 +1,17 @@
 - name: Install Nebula
   hosts: testers
   tasks:
+    - name: Install Docker (Ubuntu 22.04)
+      ansible.builtin.apt:
+        pkg:
+          - sudo
+        state: present
+      become: true
+      when: ansible_facts['distribution']=="Ubuntu" or ansible_facts['distribution']=="Debian"
+
     - name: Download Nebula
       ansible.builtin.get_url:
-        url: https://github.com/slackhq/nebula/releases/download/v{{ nebula.nebula_version }}/nebula-linux-{{ arch }}.tar.gz
+        url: https://github.com/slackhq/nebula/releases/download/v1.9.3/nebula-linux-{{ arch }}.tar.gz
         dest: /tmp
       become: true
 

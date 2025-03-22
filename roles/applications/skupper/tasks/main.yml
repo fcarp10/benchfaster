@@ -1,0 +1,169 @@
+---
+# tasks file for roles/applications/skupper
+- name: Check if skupper exists
+  stat: 
+    path: /tmp/benchfaster/skupper/skupper
+  register: skupper_exists
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Delete old skupper installation from headnodes
+  shell: |
+    KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/skupper/skupper delete
+    KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n skupper delete service/frontend
+    KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n skupper delete deployment/frontend
+    KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n skupper delete deployment/backend
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+  ignore_errors: yes
+
+- name: Delete skupper from all headnodes
+  ansible.builtin.file:
+    path: /tmp/benchfaster/skupper
+    state: absent
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Delete skupper folders from localhost
+  ansible.builtin.file:
+    path: /tmp/benchfaster/skupper
+    state: absent
+  delegate_to: localhost
+
+- name: Delete skupper folders from all headnodes
+  ansible.builtin.file:
+    path: /tmp/benchfaster/skupper
+    state: absent
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Delete skupper-deployment folders from localhost
+  ansible.builtin.file:
+    path: /tmp/benchfaster/skupper-deployment
+    state: absent
+  delegate_to: localhost
+
+- name: Delete skupper-deployment folders from all headnodes
+  ansible.builtin.file:
+    path: /tmp/benchfaster/skupper-deployment
+    state: absent
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Create skupper binary directory on localhost
+  ansible.builtin.file:
+    path: /tmp/benchfaster/skupper
+    state: directory
+  delegate_to: localhost
+
+- name: Create skupper binary directory on headnodes
+  ansible.builtin.file:
+    path: /tmp/benchfaster/skupper
+    state: directory
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Create skupper deployment directory on localhost
+  ansible.builtin.file:
+    path: /tmp/benchfaster/skupper-deployment
+    state: directory
+  delegate_to: localhost
+
+- name: Create skupper deployment directory on headnodes
+  ansible.builtin.file:
+    path: /tmp/benchfaster/skupper-deployment
+    state: directory
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Create skupper namespace
+  shell: |
+    echo "
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: skupper
+      annotations:
+        scheduler.alpha.kubernetes.io/node-selector: node-role.kubernetes.io/master=true" | kubectl apply -f -
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+#  when:
+#    - "current_host != groups['headnodes']"
+
+- name: Install skupper on all headnodes
+  shell: |
+    curl https://skupper.io/install.sh | sh -s -- --version {{ skupper.version }}
+    mv ~/.local/bin/skupper /tmp/benchfaster/skupper/
+    KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/skupper/skupper init --namespace skupper --ingress-host "192.168.50.{{ 98 + hostvars[headnode].cluster }}"
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+  when:
+    - "nebula | bool"
+
+- name: Install skupper on all headnodes
+  shell: |
+    curl https://skupper.io/install.sh | sh -s -- --version {{ skupper.version }}
+    mv ~/.local/bin/skupper /tmp/benchfaster/skupper/
+    KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/skupper/skupper init --namespace skupper --ingress-host "{{ ansible_default_ipv4.address }}"
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+  when:
+    - "not nebula | bool"
+
+- name: Create Skupper token
+  shell:
+    cmd: KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/skupper/skupper --namespace skupper token create /tmp/benchfaster/skupper-deployment/skupper.token
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Pull the submariner config file from the broker node
+  fetch:
+    src: /tmp/benchfaster/skupper-deployment/skupper.token
+    dest: /tmp/benchfaster/skupper-deployment/skupper.token
+    flat: true
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Push the submariner config file to the headnodes
+  copy:
+    src: /tmp/benchfaster/skupper-deployment/skupper.token
+    dest: /tmp/benchfaster/skupper-deployment/skupper.token
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+
+- name: Install skupper on all headnodes
+  shell: |
+    KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/skupper/skupper --namespace skupper link create /tmp/benchfaster/skupper-deployment/skupper.token
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'][1:] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Wait for all skupper deployments to finish
+  shell: |
+    sleep 3
+    kubectl -n skupper rollout status deployment skupper-router
+    kubectl -n skupper rollout status deployment skupper-service-controller
+  retries: 3
+  delay: 3
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host

@@ -1,0 +1,12 @@
+- ansible.builtin.include_role:
+    name: "{{ role_item }}"
+  with_items:
+    - benchfaster/start-multi-cluster
+#    - benchfaster/registry-add
+    - applications/skupper
+    - applications/{{ application }}
+    - applications/knative/function-add
+    - applications/jmeter_kubernetes_skupper
+    - benchfaster/stop
+  loop_control:
+    loop_var: role_item

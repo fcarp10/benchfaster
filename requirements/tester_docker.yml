@@ -5,10 +5,15 @@
     - name: Install Docker (Ubuntu 22.04)
       ansible.builtin.apt:
         pkg:
+          - bc
+          - rsync
+          - curl
           - docker.io
+          - libreswan
+          - wireguard
         state: present
       become: true
-      when: ansible_facts['distribution']=="Ubuntu"
+      when: ansible_facts['distribution']=="Ubuntu" or ansible_facts['distribution']=="Debian"
 
     - name: Install Docker (Archlinux)
       ansible.builtin.command: paru -S --noconfirm --needed {{ item }}
@@ -17,6 +22,7 @@
       when: ansible_facts['distribution']=="Archlinux"
 
     - name: Docker post-installation steps
+      become: true
       ansible.builtin.shell: |
-        sudo usermod -aG docker $USER
-        sudo systemctl enable --now docker.service
+        usermod -aG docker $USER
+        systemctl enable --now docker.service

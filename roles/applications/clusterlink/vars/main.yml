@@ -1,0 +1,4 @@
+---
+# vars file for roles/applications/openfaas
+clusterlink:
+  version: v0.4.0

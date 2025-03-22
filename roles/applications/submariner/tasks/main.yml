@@ -1,0 +1,198 @@
+---
+# tasks file for roles/applications/submariner
+# https://submariner.io/operations/deployment/helm/
+- name: Delete submariner folders from localhost
+  ansible.builtin.file:
+    path: /tmp/benchfaster/submariner
+    state: absent
+  delegate_to: localhost
+
+- name: Delete submariner folders from all headnodes
+  ansible.builtin.file:
+    path: /tmp/benchfaster/submariner
+    state: absent
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Delete submariner-deployment folders from localhost
+  ansible.builtin.file:
+    path: /tmp/benchfaster/submariner-deployment
+    state: absent
+  delegate_to: localhost
+
+- name: Delete submariner-deployment folders from all headnodes
+  ansible.builtin.file:
+    path: /tmp/benchfaster/submariner-deployment
+    state: absent
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Create submariner binary directory
+  ansible.builtin.file:
+    path: /tmp/benchfaster/submariner
+    state: directory
+  delegate_to: localhost
+
+- name: Create submariner binary directory
+  ansible.builtin.file:
+    path: /tmp/benchfaster/submariner
+    state: directory
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+#    podman build -t submariner .
+#    podman create --name builder docker.io/michalke-it/submariner:latest
+#    podman cp builder:/app/bin/submariner ./bin/
+- name: Deactivating Nebula
+  shell: 
+    cmd: "systemctl stop nebula"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "not nebula | bool"
+
+- name: Deactivating Nebula
+  shell: 
+    cmd: "systemctl stop nebula"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "not nebula | bool"
+
+- name: Download submariner ctl to localhost
+  shell: |
+    curl -Ls https://get.submariner.io | bash
+    mv ~/.local/bin /tmp/benchfaster/submariner/
+  delegate_to: localhost
+
+- name: Download subctl to all headnodes
+  shell: |
+    curl -Ls https://get.submariner.io | VERSION={{ submariner.version }} bash
+    mv ~/.local/bin /tmp/benchfaster/submariner/
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Create submariner deployment directories
+  ansible.builtin.file:
+    path: /tmp/benchfaster/submariner-deployment
+    state: directory
+  delegate_to: localhost
+
+- name: Create submariner deployment directories
+  ansible.builtin.file:
+    path: /tmp/benchfaster/submariner-deployment
+    state: directory
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+# Add: create namespace and restrict it to worker nodes!
+#- name: Create submariner namespace
+#  become: yes
+#  shell: |
+#    echo "
+#    apiVersion: v1
+#    kind: Namespace
+#    metadata:
+#      name: submariner-operator
+#      annotations:
+#        scheduler.alpha.kubernetes.io/node-selector: node-role.kubernetes.io/control-plane=true" | kubectl apply -f -
+#  delegate_to: "{{ current_host }}"
+#  loop: "{{ groups['headnodes'] }}"
+#  loop_control:
+#    loop_var: current_host
+#  when:
+#    - "current_host != groups['headnodes'][0]"
+
+# try with globalnet??
+- name: Delete old submariner installations
+  shell:
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/submariner/bin/subctl uninstall -y"
+  delegate_to: "{{ headnode }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: headnode
+
+- name: Install submariner sm-broker
+  shell:
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/submariner/bin/subctl deploy-broker --kubeconfig /etc/rancher/k3s/k3s.yaml --server https://192.168.50.99:6443 --namespace {{ submariner.broker_namespace }} --globalnet"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+  when:
+    - "nebula | bool"
+
+- name: Install submariner sm-broker
+  shell:
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/submariner/bin/subctl deploy-broker --kubeconfig /etc/rancher/k3s/k3s.yaml --server https://{{ headnodeip.stdout }}:6443 --namespace {{ submariner.broker_namespace }}"
+#--globalnet"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+  when:
+    - "not nebula | bool"
+
+- name: Copy broker info file
+  shell:
+    cmd: "cp ~/broker-info.subm /tmp/benchfaster/submariner-deployment/"
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Pull the submariner config file from the broker node
+  fetch:
+    src: /tmp/benchfaster/submariner-deployment/broker-info.subm
+    dest: /tmp/benchfaster/submariner-deployment/broker-info.subm
+    flat: true
+  delegate_to: "{{ groups['headnodes'][0] }}"
+
+- name: Push the submariner config file to the headnodes
+  copy:
+    src: /tmp/benchfaster/submariner-deployment/broker-info.subm
+    dest: /tmp/benchfaster/submariner-deployment/broker-info.subm
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - current_host != groups['headnodes'][0]
+
+- name: Joining clusters to sm-broker
+  shell: 
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/submariner/bin/subctl join /tmp/benchfaster/submariner-deployment/broker-info.subm --broker-url https://192.168.50.99:6443 --kubeconfig /etc/rancher/k3s/k3s.yaml --pod-debug --cable-driver {{ submariner.cabledriver }} --clusterid cluster{{ hostvars[current_host].cluster }} --clustercidr 10.{{ 2 * hostvars[current_host].cluster + 42 }}.0.0/16 --servicecidr 10.{{ 2 * hostvars[current_host].cluster + 43 }}.0.0/16"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "nebula | bool"
+
+- name: Joining clusters to sm-broker
+  shell: 
+    cmd: "KUBECONFIG=/etc/rancher/k3s/k3s.yaml /tmp/benchfaster/submariner/bin/subctl join /tmp/benchfaster/submariner-deployment/broker-info.subm --broker-url https://{{ headnodeip.stdout }}:6443 --kubeconfig /etc/rancher/k3s/k3s.yaml --pod-debug --cable-driver {{ submariner.cabledriver }} --clusterid cluster{{ hostvars[current_host].cluster }} --clustercidr 10.{{ 2 * hostvars[current_host].cluster + 42 }}.0.0/16 --servicecidr 10.{{ 2 * hostvars[current_host].cluster + 43 }}.0.0/16"
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host
+  when:
+    - "not nebula | bool"
+
+- name: Wait for all submariner deployments to finish
+  shell: |
+    sleep 3
+    kubectl rollout status deployment submariner-operator -n submariner-operator
+    kubectl rollout status deployment submariner-lighthouse-agent -n submariner-operator
+    kubectl rollout status deployment submariner-lighthouse-coredns -n submariner-operator
+  retries: 3
+  delay: 3
+  delegate_to: "{{ current_host }}"
+  loop: "{{ groups['headnodes'] }}"
+  loop_control:
+    loop_var: current_host

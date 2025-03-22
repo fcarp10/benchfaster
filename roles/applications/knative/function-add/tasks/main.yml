@@ -8,7 +8,8 @@
     then
       sleep 3
     else
-      sudo -E kubectl -n default rollout status deploy/{{ func_item }}-00001-deployment --timeout=60s
+      sudo -E kubectl -n functions rollout status deploy/{{ func_item }}-00001-deployment --timeout=60s
+      sudo -E kubectl rollout status deploy/{{ func_item }}-00001-deployment --timeout=60s
     fi
     sleep 5
   become: yes

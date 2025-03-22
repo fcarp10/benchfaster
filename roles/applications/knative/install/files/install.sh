@@ -56,4 +56,6 @@ sudo -E kubectl --namespace kourier-system get service kourier
 echo "Configuring DNS..."
 sudo -E kubectl apply -f https://github.com/knative/serving/releases/download/knative-$VERSION/serving-default-domain.yaml
 
+echo "Enabling NodeAffinity feature..."
+sudo -E kubectl -n knative-serving patch cm config-features -p '{"data": {"kubernetes.podspec-affinity": "enabled"}}'
 echo "Knative deployment finished!"

@@ -1,0 +1,10 @@
+---
+# vars file for roles/applications/openfaas
+submariner:
+  psk: Wyo2CSbnupKLnV6WONCK70LzwoisI9dPUx8SqYZjDya7gddPjLD4HjPmsrNH6WaM
+  submariner_namespace: submariner-operator
+  broker_namespace: submariner-broker
+  version: 0.18.0
+#  cabledriver: vxlan
+  cabledriver: libreswan
+#  cabledriver: wireguard

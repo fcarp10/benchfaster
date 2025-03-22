@@ -48,7 +48,7 @@ Before=sshd.service
 SyslogIdentifier=nebula
 StandardOutput=syslog
 StandardError=syslog
-ExecReload=/bin/kill -HUP $MAINPID
+ExecReload=/bin/kill -HUP \$MAINPID
 ExecStart=/usr/local/bin/nebula -config /etc/nebula/nebula.yml
 Restart=always
 

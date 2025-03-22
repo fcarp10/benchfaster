@@ -4,18 +4,18 @@
     - name: Install (old) JMeter (Ubuntu 22.04)
       ansible.builtin.apt:
         pkg:
-          - openjdk-8-jdk
+          - openjdk-17-jdk
           - jmeter
         state: present
       become: true
-      when: ansible_facts['distribution']=="Ubuntu"
+      when: ansible_facts['distribution']=="Ubuntu" or ansible_facts['distribution']=="Debian"
 
     - name: Install (new) JMeter (Ubuntu 22.04)
       ansible.builtin.shell: |
         wget -q -nc https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.5.tgz
         tar xf apache-jmeter-5.5.tgz
-        sudo mv /usr/share/jmeter /usr/share/jmeter-old
-        sudo mv apache-jmeter-5.5 /usr/share/jmeter
+        rm -Rf /usr/share/jmeter
+        mv apache-jmeter-5.5 /usr/share/jmeter
       become: true
       when: ansible_facts['distribution']=="Ubuntu"
 
